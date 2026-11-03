@@ -1,0 +1,362 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-noto-sans-bengali), system-ui, sans-serif;
+  --font-serif: var(--font-noto-serif-bengali), Georgia, serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(0.977 0.009 191.43);
+  --foreground: oklch(0.256 0.039 232.62);
+  --card: oklch(0.998 0.003 220.34);
+  --card-foreground: oklch(0.256 0.039 232.62);
+  --popover: oklch(0.998 0.003 220.34);
+  --popover-foreground: oklch(0.256 0.039 232.62);
+  --primary: oklch(0.75 0.135 84.2);
+  --primary-foreground: oklch(0.2 0.02 80);
+  --secondary: oklch(0.934 0.018 207.26);
+  --secondary-foreground: oklch(0.314 0.047 230.7);
+  --muted: oklch(0.95 0.014 209.59);
+  --muted-foreground: oklch(0.47 0.04 232.2);
+  --accent: oklch(0.83 0.12 86.7);
+  --accent-foreground: oklch(0.23 0.03 80);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.87 0.028 213.55);
+  --input: oklch(0.885 0.024 214.03);
+  --ring: oklch(0.56 0.098 216.3);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --radius: 0.95rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-noto-sans-bengali), 'Noto Sans Bengali', system-ui, sans-serif;
+    background-image:
+      radial-gradient(circle at 10% 8%, rgba(199, 154, 29, 0.14), transparent 40%),
+      radial-gradient(circle at 92% 18%, rgba(234, 173, 58, 0.14), transparent 38%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+    background-attachment: fixed;
+  }
+  html {
+    font-family: var(--font-noto-sans-bengali), 'Noto Sans Bengali', system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .text-xl,
+  .text-2xl,
+  .text-3xl,
+  .font-bold {
+    font-family: var(--font-noto-serif-bengali), 'Noto Serif Bengali', Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 6s ease infinite;
+}
+
+@layer utilities {
+  .ase-page {
+    @apply min-h-screen text-slate-900;
+  }
+
+  .ase-hero {
+    @apply relative overflow-hidden border-b border-white/20 py-20 text-white sm:py-28;
+    background: linear-gradient(160deg, #204a63 0%, #2f6c81 46%, #1f5d73 100%);
+  }
+
+  .ase-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.2;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.25) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .ase-panel {
+    @apply rounded-3xl border border-white/80 bg-white/90 shadow-xl shadow-slate-300/25 backdrop-blur-sm;
+  }
+
+  .ase-fade-up {
+    animation: float-in 600ms ease-out both;
+  }
+}
+
+/* Scoped Rich Text & Article Typography (Only affects elements inside .rich-text-content or .prose) */
+.rich-text-content,
+.prose {
+  color: #222222;
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+.rich-text-content :where(h1, h2, h3, h4, h5, h6):not(.not-prose),
+.prose :where(h1, h2, h3, h4, h5, h6):not(.not-prose) {
+  font-family: 'Noto Serif Bengali', serif;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.015em;
+}
+
+.rich-text-content :where(h1):not(.not-prose),
+.prose :where(h1):not(.not-prose) {
+  font-size: 1.75rem;
+  line-height: 1.35;
+  margin-top: 2rem;
+  margin-bottom: 0.875rem;
+}
+
+.rich-text-content :where(h2):not(.not-prose),
+.prose :where(h2):not(.not-prose) {
+  font-size: 1.45rem;
+  line-height: 1.4;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.rich-text-content :where(h3):not(.not-prose),
+.prose :where(h3):not(.not-prose) {
+  font-size: 1.25rem;
+  line-height: 1.45;
+  margin-top: 1.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.rich-text-content :where(h4):not(.not-prose),
+.prose :where(h4):not(.not-prose) {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-content :where(p):not(.not-prose),
+.prose :where(p):not(.not-prose) {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  line-height: 1.9;
+}
+
+.rich-text-content :where(strong, b):not(.not-prose),
+.prose :where(strong, b):not(.not-prose) {
+  font-weight: 700;
+  color: #000000;
+}
+
+.rich-text-content :where(em, i):not(.not-prose),
+.prose :where(em, i):not(.not-prose) {
+  font-style: italic;
+}
+
+.rich-text-content :where(u):not(.not-prose),
+.prose :where(u):not(.not-prose) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rich-text-content :where(blockquote):not(.not-prose),
+.prose :where(blockquote):not(.not-prose) {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  border-left: 4px solid #c79a1d;
+  background-color: rgba(199, 154, 29, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #334155;
+  font-style: normal;
+}
+
+.rich-text-content :where(blockquote p):not(.not-prose),
+.prose :where(blockquote p):not(.not-prose) {
+  margin-bottom: 0;
+}
+
+.rich-text-content :where(ul):not(.not-prose),
+.prose :where(ul):not(.not-prose) {
+  list-style-type: disc;
+  margin: 1rem 0 1.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-content :where(ol):not(.not-prose),
+.prose :where(ol):not(.not-prose) {
+  list-style-type: decimal;
+  margin: 1rem 0 1.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-content :where(li):not(.not-prose),
+.prose :where(li):not(.not-prose) {
+  margin-bottom: 0.5rem;
+  line-height: 1.8;
+}
+
+.rich-text-content :where(a):not(.not-prose),
+.prose :where(a):not(.not-prose) {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.rich-text-content :where(a):hover:not(.not-prose),
+.prose :where(a):hover:not(.not-prose) {
+  color: #1d4ed8;
+}
+
+.rich-text-content :where(img):not(.not-prose),
+.prose :where(img):not(.not-prose) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1.5rem auto;
+  display: block;
+}
+
+.rich-text-content :where(video):not(.not-prose),
+.prose :where(video):not(.not-prose) {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  background: #0f172a;
+}
+
+.rich-text-content .youtube,
+.prose .youtube {
+  position: relative;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  padding-top: 56.25%;
+}
+
+.rich-text-content .youtube iframe,
+.prose .youtube iframe {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  border: 0;
+}

@@ -1,0 +1,788 @@
+import "server-only";
+
+import { extractPagination, fetchApi, type BasePagination } from "./common";
+
+export type NewsStatus = "draft" | "published" | "scheduled";
+
+export type NewsRelationCategory = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
+export type NewsApiModel = {
+  id: string;
+  title: string;
+  unique_code: string;
+  type: "standard" | "video";
+  youtube_video_url: string;
+  institution_type: string;
+  institution_name: string;
+  location: string;
+  excerpt: string;
+  content: string;
+  category_id: string;
+  sub_category_id: string;
+  author_name: string;
+  source_name: string;
+  source_url: string;
+  division_id: string;
+  district_id: string;
+  upazila_id: string;
+  feature_image_id: string;
+  feature_image_url: string | null;
+  status: NewsStatus;
+  publish_at: string;
+  tags: string[];
+  language: string;
+  read_time_minutes: number;
+  is_featured: boolean;
+  show_in_home_left: boolean;
+  is_breaking: boolean;
+  allow_comments: boolean;
+  meta_title: string;
+  meta_description: string;
+  meta_keywords: string;
+  category?: NewsRelationCategory;
+  sub_category?: NewsRelationCategory;
+  category_slug?: string;
+  sub_category_slug?: string;
+  created_at: string;
+};
+
+export type GetNewsParams = {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  status?: NewsStatus;
+  type?: "standard" | "video";
+  category_id?: string | number;
+  language?: string;
+};
+
+export type NewsListResult = {
+  items: NewsApiModel[];
+  pagination: BasePagination;
+};
+
+export type HeroNewsItem = {
+  id: string;
+  title: string;
+  unique_code: string;
+  type?: "standard" | "video";
+  youtube_video_url?: string;
+  youtube_thumbnail_url?: string;
+  excerpt: string;
+  feature_image_url: string | null;
+  publish_at: string;
+  category?: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+  category_slug?: string;
+  sub_category_slug?: string;
+};
+
+export type HeroNewsResponse = {
+  feature_news: HeroNewsItem[];
+  home_left: HeroNewsItem[];
+};
+
+export type PopularNewsResponse = HeroNewsItem[];
+
+export type LatestNewsResponse = HeroNewsItem[];
+
+export type TabNewsResponse = HeroNewsItem[];
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return fallback;
+}
+
+function normalizeDateString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "date" in value) {
+    const d = (value as { date: unknown }).date;
+    if (typeof d === "string") return d;
+  }
+  return fallback;
+}
+
+function asNumber(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes"].includes(normalized)) return true;
+    if (["0", "false", "no"].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
+function normalizeStatus(value: unknown): NewsStatus {
+  const normalized = asString(value, "draft").toLowerCase();
+  if (normalized === "published" || normalized === "scheduled") {
+    return normalized;
+  }
+  return "draft";
+}
+
+function normalizeRelationCategory(
+  value: unknown,
+): NewsRelationCategory | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const item = asObject(value);
+  return {
+    id: asString(item.id),
+    title: asString(item.title),
+    slug: asString(item.slug),
+  };
+}
+
+function normalizeNews(value: unknown): NewsApiModel {
+  const item = asObject(value);
+
+  return {
+    id: asString(item.id),
+    title: asString(item.title),
+    unique_code: asString(item.unique_code ?? null),
+    type: asString(item.type, "standard") as "standard" | "video",
+    youtube_video_url: asString(item.youtube_video_url ?? null),
+    institution_type: asString(item.institution_type ?? null),
+    institution_name: asString(item.institution_name ?? null),
+    location: asString(item.location ?? null),
+    excerpt: asString(item.excerpt),
+    content: asString(item.content),
+    category_id: asString(item.category_id ?? null),
+    sub_category_id: asString(item.sub_category_id ?? null),
+    author_name: asString(item.author_name ?? null),
+    source_name: asString(item.source_name ?? null),
+    source_url: asString(item.source_url ?? null),
+    division_id: asString(item.division_id ?? null),
+    district_id: asString(item.district_id ?? null),
+    upazila_id: asString(item.upazila_id ?? null),
+    feature_image_id: asString(item.feature_image_id ?? null),
+    feature_image_url:
+      asString(item.feature_image_url ?? item.featureImageUrl) || null,
+    status: normalizeStatus(item.status),
+    publish_at: normalizeDateString(item.publish_at),
+    tags: Array.isArray(item.tags)
+      ? item.tags.map(String)
+      : asString(item.tags)
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+    language: asString(item.language, "bn"),
+    read_time_minutes: Math.max(0, asNumber(item.read_time_minutes ?? 0, 0)),
+    is_featured: asBoolean(item.is_featured ?? false, false),
+    show_in_home_left: asBoolean(item.show_in_home_left ?? false, false),
+    is_breaking: asBoolean(item.is_breaking ?? false, false),
+    allow_comments: asBoolean(item.allow_comments ?? true, true),
+    meta_title: asString(item.meta_title ?? null),
+    meta_description: asString(item.meta_description ?? null),
+    meta_keywords: asString(item.meta_keywords ?? null),
+    category: normalizeRelationCategory(item.category),
+    sub_category: normalizeRelationCategory(item.sub_category ?? null),
+    category_slug: asString(item.category_slug ?? null),
+    sub_category_slug: asString(item.sub_category_slug ?? null),
+    created_at: normalizeDateString(item.created_at),
+  };
+}
+
+function normalizeHeroItem(item: any): HeroNewsItem {
+  return {
+    id: asString(item.id),
+    title: asString(item.title),
+    unique_code: asString(item.unique_code ?? item.slug ?? item.id),
+    type: asString(item.type, "standard") as "standard" | "video",
+    youtube_video_url: asString(item.youtube_video_url ?? item.youtubeVideoUrl),
+    youtube_thumbnail_url: asString(
+      item.youtube_thumbnail_url ?? item.youtubeThumbnailUrl,
+    ),
+    excerpt: asString(item.excerpt),
+    feature_image_url:
+      asString(item.feature_image_url ?? item.featureImageUrl) || null,
+    publish_at: normalizeDateString(item.publish_at ?? item.publishAt),
+    category: normalizeRelationCategory(item.category),
+    category_slug: asString(item.category_slug ?? null),
+    sub_category_slug: asString(item.sub_category_slug ?? null),
+  };
+}
+
+function extractList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  const root = asObject(payload);
+  if (Array.isArray(root.resources)) {
+    return root.resources;
+  }
+
+  const resources = asObject(root.resources);
+  const candidates = [
+    resources.news,
+    resources.items,
+    resources.data,
+    root.news,
+    root.data,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+  }
+
+  return [];
+}
+
+function extractOne(payload: unknown): unknown | null {
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    const root = payload as Record<string, unknown>;
+    if (root.id !== undefined) {
+      return root;
+    }
+  }
+
+  const root = asObject(payload);
+  const resources = asObject(root.resources);
+
+  const candidates = [
+    root.resources,
+    resources.main_news,
+    resources.news,
+    resources.item,
+    resources.data,
+    root.main_news,
+    root.news,
+    root.data,
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      candidate &&
+      typeof candidate === "object" &&
+      !Array.isArray(candidate)
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+export async function getNewsList(
+  params?: GetNewsParams,
+): Promise<NewsListResult> {
+  const fallbackPage = params?.page ?? 1;
+  const fallbackper_page = params?.per_page ?? 20;
+
+  try {
+    const query = new URLSearchParams();
+
+    if (params?.page !== undefined) {
+      query.set("page", String(params.page));
+    }
+
+    if (params?.per_page !== undefined) {
+      query.set("per_page", String(params.per_page));
+    }
+
+    if (params?.search) {
+      query.set("search", params.search);
+    }
+
+    if (params?.status) {
+      query.set("status", params.status);
+    }
+
+    if (params?.type) {
+      query.set("type", params.type);
+    }
+
+    if (
+      params?.category_id !== undefined &&
+      String(params.category_id).trim()
+    ) {
+      query.set("category_id", String(params.category_id));
+    }
+
+    if (params?.language) {
+      query.set("language", params.language);
+    }
+
+    const path = query.toString()
+      ? `/admin/news?${query.toString()}`
+      : "/admin/news";
+    const response = await fetchApi(path);
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        ((payload as Record<string, unknown>)?.message as string) ||
+          "Failed to load news list.",
+      );
+    }
+
+    return {
+      items: extractList(payload).map(normalizeNews),
+      pagination: extractPagination(payload, fallbackPage, fallbackper_page),
+    };
+  } catch (error) {
+    console.error("Failed to fetch news list:", error);
+
+    return {
+      items: [],
+      pagination: {
+        current_page: fallbackPage,
+        last_page: fallbackPage,
+        per_page: fallbackper_page,
+        total: 0,
+      },
+    };
+  }
+}
+
+export async function getNewsById(
+  newsId: string,
+): Promise<NewsApiModel | null> {
+  try {
+    const response = await fetchApi(`/admin/news/${newsId}`);
+    const payload = await response.json().catch(() => null);
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        ((payload as Record<string, unknown>)?.message as string) ||
+          "Failed to load news item.",
+      );
+    }
+
+    const item = extractOne(payload);
+    if (!item) {
+      return null;
+    }
+
+    return normalizeNews(item);
+  } catch (error) {
+    console.error(`Failed to fetch news ${newsId}:`, error);
+    return null;
+  }
+}
+
+export async function getHeroNews(): Promise<HeroNewsResponse> {
+  try {
+    const response = await fetchApi("/hero-news", undefined, {
+      includeAuth: false,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return { feature_news: [], home_left: [] };
+    }
+
+    const data = payload?.resources || payload;
+
+    return {
+      feature_news: Array.isArray(data?.feature_news)
+        ? data.feature_news.map(normalizeHeroItem)
+        : [],
+      home_left: Array.isArray(data?.home_left)
+        ? data.home_left.map(normalizeHeroItem)
+        : [],
+    };
+  } catch (error) {
+    console.error("Failed to fetch hero news:", error);
+    return { feature_news: [], home_left: [] };
+  }
+}
+
+export async function getPopularNews(): Promise<PopularNewsResponse> {
+  try {
+    const response = await fetchApi("/popular-news", undefined, {
+      includeAuth: false,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const resources = payload?.resources || payload;
+    const items = Array.isArray(resources) ? resources : resources.data || [];
+
+    return Array.isArray(items) ? items.map(normalizeHeroItem) : [];
+  } catch (error) {
+    console.error("Failed to fetch popular news:", error);
+    return [];
+  }
+}
+
+export async function getLatestNews(): Promise<LatestNewsResponse> {
+  try {
+    const response = await fetchApi("/latest-news", undefined, {
+      includeAuth: false,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const resources = payload?.resources || payload;
+
+    return Array.isArray(resources) ? resources.map(normalizeHeroItem) : [];
+  } catch (error) {
+    console.error("Failed to fetch latest news:", error);
+    return [];
+  }
+}
+
+export async function getTabNews(): Promise<TabNewsResponse> {
+  try {
+    const response = await fetchApi("/tap-news", undefined, {
+      includeAuth: false,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const resources = payload?.resources || payload;
+
+    return Array.isArray(resources) ? resources.map(normalizeHeroItem) : [];
+  } catch (error) {
+    console.error("Failed to fetch tab news:", error);
+    return [];
+  }
+}
+
+export async function getVideoNews(): Promise<HeroNewsItem[]> {
+  try {
+    const response = await fetchApi("/video-news", undefined, {
+      includeAuth: false,
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const resources = payload?.resources || payload;
+
+    return Array.isArray(resources) ? resources.map(normalizeHeroItem) : [];
+  } catch (error) {
+    console.error("Failed to fetch video news:", error);
+    return [];
+  }
+}
+
+export async function getLocalNews(params: {
+  division_id?: string;
+  district_id?: string;
+  upazila_id?: string;
+}): Promise<HeroNewsItem[]> {
+  try {
+    const query = new URLSearchParams();
+    if (params.division_id) query.set("division_id", params.division_id);
+    if (params.district_id) query.set("district_id", params.district_id);
+    if (params.upazila_id) query.set("upazila_id", params.upazila_id);
+
+    const url = query.toString()
+      ? `/local-news?${query.toString()}`
+      : "/local-news";
+    const response = await fetchApi(url, undefined, { includeAuth: false });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) return [];
+
+    const resources = payload?.resources || payload;
+    return Array.isArray(resources) ? resources.map(normalizeHeroItem) : [];
+  } catch (error) {
+    console.error("Failed to fetch local news:", error);
+    return [];
+  }
+}
+
+export async function resolveAnyPath(
+  path: string | string[],
+  page: number = 1,
+): Promise<
+  | { contentType: "news_details"; data: any }
+  | { contentType: "category_page"; data: CategoryPageResponse }
+  | null
+> {
+  try {
+    const pathString = Array.isArray(path) ? path.join("/") : path;
+    const response = await fetchApi(
+      `/resolve-path/${pathString}?page=${page}`,
+      undefined,
+      { includeAuth: false },
+    );
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) return null;
+
+    const resources = payload?.resources || payload;
+    const contentType = resources?.content_type;
+
+    if (contentType === "news_details") {
+      const main_news = resources?.main_news;
+      const item = extractOne(main_news);
+      if (!item) return null;
+
+      return {
+        contentType: "news_details",
+        data: {
+          main_news: normalizeNews(item),
+          category_news: resources?.category_news,
+          category_hierarchy: resources?.category_hierarchy,
+          popular_news: Array.isArray(resources?.popular_news)
+            ? resources.popular_news.map(normalizeHeroItem)
+            : [],
+        },
+      };
+    }
+
+    if (contentType === "category_page") {
+      const data: CategoryPageResponse = {
+        category: {
+          id: asString(resources.category?.id),
+          title: asString(resources.category?.title),
+          slug: asString(resources.category?.slug),
+          meta_title: asString(resources.category?.meta_title) || null,
+          meta_description:
+            asString(resources.category?.meta_description) || null,
+          meta_keywords: asString(resources.category?.meta_keywords) || null,
+        },
+        sub_categories: Array.isArray(resources.sub_categories)
+          ? resources.sub_categories.map((c: any) => ({
+              id: asString(c.id),
+              title: asString(c.title),
+              slug: asString(c.slug),
+            }))
+          : [],
+        popular_news: Array.isArray(resources.popular_news)
+          ? resources.popular_news.map(normalizeHeroItem)
+          : [],
+        latest_news: Array.isArray(resources.latest_news)
+          ? resources.latest_news.map(normalizeHeroItem)
+          : [],
+        selective_news: Array.isArray(resources.selective_news)
+          ? resources.selective_news.map(normalizeHeroItem)
+          : [],
+        paginated_news: Array.isArray(resources.paginated_news)
+          ? resources.paginated_news.map(normalizeHeroItem)
+          : [],
+        category_hierarchy: resources.category_hierarchy || [],
+        meta: {
+          current_page: asNumber(resources.meta?.current_page),
+          last_page: asNumber(resources.meta?.last_page),
+          per_page: asNumber(resources.meta?.per_page),
+          total: asNumber(resources.meta?.total),
+        },
+      };
+
+      const slug = Array.isArray(path) ? path[path.length - 1] : path;
+      if (slug === "video" && data.paginated_news.length === 0) {
+        const vNews = await getVideoNews();
+        if (vNews && vNews.length > 0) {
+          data.paginated_news = vNews;
+          if (data.latest_news.length === 0) data.latest_news = vNews;
+          if (data.popular_news.length === 0)
+            data.popular_news = vNews.slice(0, 5);
+          data.meta.total = vNews.length;
+          data.meta.per_page = vNews.length;
+          data.meta.last_page = 1;
+        }
+      }
+
+      return {
+        contentType: "category_page",
+        data,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Failed to resolve path for ${path}:`, error);
+    return null;
+  }
+}
+
+export type CategoryPageResponse = {
+  category: {
+    id: string;
+    title: string;
+    slug: string;
+    meta_title: string | null;
+    meta_description: string | null;
+    meta_keywords: string | null;
+  };
+  sub_categories: Array<{
+    id: string;
+    title: string;
+    slug: string;
+  }>;
+  popular_news: HeroNewsItem[];
+  latest_news: HeroNewsItem[];
+  selective_news: HeroNewsItem[];
+  paginated_news: HeroNewsItem[];
+  category_hierarchy: Array<{ id: number; name: string; slug: string }>;
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+};
+
+export async function getCategoryPageData(
+  path: string | string[],
+  page: number = 1,
+): Promise<CategoryPageResponse | null> {
+  const result = await resolveAnyPath(path, page);
+  if (result?.contentType === "category_page") {
+    return result.data;
+  }
+  return null;
+}
+
+export async function searchCustomerNews(params: {
+  q?: string;
+  category_id?: string;
+  author?: string;
+  type?: string;
+  date?: string;
+  sort?: string;
+  page?: number;
+  per_page?: number;
+}): Promise<{
+  items: HeroNewsItem[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+  };
+}> {
+  try {
+    const query = new URLSearchParams();
+    if (params.q) query.set("q", params.q);
+    if (params.category_id) query.set("category_id", params.category_id);
+    if (params.author) query.set("author", params.author);
+    if (params.type) query.set("type", params.type);
+    if (params.date) query.set("date", params.date);
+    if (params.sort) query.set("sort", params.sort);
+    if (params.page) query.set("page", params.page.toString());
+    if (params.per_page) query.set("per_page", params.per_page.toString());
+
+    const url = query.toString()
+      ? `/search-news?${query.toString()}`
+      : "/search-news";
+    const response = await fetchApi(url, undefined, { includeAuth: false });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return {
+        items: [],
+        meta: { current_page: 1, last_page: 1, total: 0, per_page: 12 },
+      };
+    }
+
+    const resources = payload?.resources || payload;
+    const news = resources?.news;
+    const pagination = resources?.pagination;
+
+    return {
+      items: Array.isArray(news) ? news.map(normalizeHeroItem) : [],
+      meta: {
+        current_page: asNumber(pagination?.current_page, 1),
+        last_page: asNumber(pagination?.last_page, 1),
+        total: asNumber(pagination?.total, 0),
+        per_page: asNumber(pagination?.per_page, 12),
+      },
+    };
+  } catch (error) {
+    console.error("Failed to search news:", error);
+    return {
+      items: [],
+      meta: { current_page: 1, last_page: 1, total: 0, per_page: 12 },
+    };
+  }
+}
+
+export async function getTopicNews(
+  tagName: string,
+  page = 1,
+): Promise<{
+  items: HeroNewsItem[];
+  topic: string;
+  meta: {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
+  };
+}> {
+  try {
+    const response = await fetchApi(
+      `/topic/${encodeURIComponent(tagName)}?page=${page}`,
+      undefined,
+      { includeAuth: false },
+    );
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return {
+        items: [],
+        topic: tagName,
+        meta: { current_page: 1, last_page: 1, total: 0, per_page: 12 },
+      };
+    }
+
+    const resources = payload?.resources || payload;
+    const news = resources?.news;
+    const pagination = resources?.pagination;
+    const topic = resources?.topic || tagName;
+
+    return {
+      items: Array.isArray(news) ? news.map(normalizeHeroItem) : [],
+      topic,
+      meta: {
+        current_page: asNumber(pagination?.current_page, 1),
+        last_page: asNumber(pagination?.last_page, 1),
+        total: asNumber(pagination?.total, 0),
+        per_page: asNumber(pagination?.per_page, 12),
+      },
+    };
+  } catch (error) {
+    console.error(`Failed to fetch topic news for ${tagName}:`, error);
+    return {
+      items: [],
+      topic: tagName,
+      meta: { current_page: 1, last_page: 1, total: 0, per_page: 12 },
+    };
+  }
+}

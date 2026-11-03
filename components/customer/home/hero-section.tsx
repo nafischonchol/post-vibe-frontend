@@ -1,0 +1,479 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Play, Clock, ChevronRight } from "lucide-react";
+import { type HeroNewsResponse, type PopularNewsResponse, type LatestNewsResponse, type HeroNewsItem } from "@/lib/api/news";
+import { type Advertisement } from "@/lib/api/advertisements";
+import { AdBanner } from "@/components/customer/home/ad-banner";
+import { formatBengaliRelativeTime } from "@/lib/formatters";
+import { getNewsUrl } from "@/lib/utils";
+
+const HOME_LAYOUT_CONFIG = {
+  leftNewsCount: 6,
+  heroCardCount: 2,
+  centerGridCount: 8,
+} as const;
+
+const btnGradients = [
+  "from-orange-400 to-orange-500",
+  "from-teal-400 to-emerald-500",
+  "from-blue-500 to-cyan-500",
+  "from-rose-500 to-pink-500",
+  "from-emerald-500 to-green-600",
+  "from-violet-500 to-purple-500",
+  "from-pink-500 to-rose-400",
+  "from-slate-600 to-slate-800",
+];
+
+// Service Utility Hub Data
+const utilitySections = [
+  {
+    name: "🚨 Emergency",
+    color: "bg-red-50 text-red-600 border-red-100",
+    links: [
+      { label: "Ambulance 🚑", href: "/ambulance" },
+      { label: "Police 👮", href: "/police" },
+      { label: "Fire 🚒", href: "/fire-service" },
+      { label: "Blood 🩸", href: "/blood-donation" },
+      { label: "Doctor 🏥", href: "/doctors" },
+    ],
+  },
+
+  {
+    name: "🎓 Education",
+    color: "bg-amber-50 text-amber-600 border-amber-100",
+    links: [
+      { label: "Jobs", href: "/jobs" },
+      { label: "Admission", href: "/admission" },
+      { label: "CGPA Calculator", href: "/cgpa-calculator" },
+      { label: "✍️ Write & Submit Article", href: "/submit-article" },
+    ],
+  },
+
+];
+
+interface HeroSectionProps {
+  data?: HeroNewsResponse;
+  popularNews?: PopularNewsResponse;
+  latestNews?: LatestNewsResponse;
+  videoNews?: HeroNewsItem[];
+  advertisements?: Advertisement[];
+}
+
+export function HeroSection({
+  data,
+  popularNews,
+  latestNews,
+  videoNews,
+  advertisements = [],
+}: HeroSectionProps) {
+
+  const leftStories =
+    data?.home_left && data.home_left.length > 0
+      ? data.home_left.map((item) => ({
+          image: item.feature_image_url,
+          title: item.title,
+          time: formatBengaliRelativeTime(item.publish_at),
+          unique_code: item.unique_code,
+          category_slug: item.category_slug,
+          sub_category_slug: item.sub_category_slug,
+        }))
+      : []
+          .slice(0, HOME_LAYOUT_CONFIG.leftNewsCount)
+          .map((s) => ({ ...s, unique_code: "sample-slug" }));
+
+  const featuredStories =
+    data?.feature_news && data.feature_news.length > 0
+      ? data.feature_news.map((item) => ({
+          image: item.feature_image_url,
+          category: item.category?.title || "জাতীয়",
+          title: item.title,
+          excerpt: item.excerpt,
+          time: formatBengaliRelativeTime(item.publish_at),
+          unique_code: item.unique_code,
+          category_slug: item.category_slug,
+          sub_category_slug: item.sub_category_slug,
+        }))
+      : []
+          .slice(0, HOME_LAYOUT_CONFIG.heroCardCount)
+          .map((s) => ({ ...s, unique_code: "sample-slug" }));
+
+  const centerGridStories =
+    popularNews && popularNews.length > 0
+      ? popularNews
+          .slice(0, HOME_LAYOUT_CONFIG.centerGridCount)
+          .map((item) => ({
+            image: item.feature_image_url,
+            title: item.title,
+            unique_code: item.unique_code,
+            category_slug: item.category_slug,
+            sub_category_slug: item.sub_category_slug,
+          }))
+      : []
+          .slice(0, HOME_LAYOUT_CONFIG.centerGridCount)
+          .map((s) => ({ ...s, unique_code: "sample-slug" }));
+
+  const topicData =
+    latestNews && latestNews.length > 0
+      ? {
+          title: latestNews[0].title,
+          main: {
+            image: latestNews[0].feature_image_url,
+            title: latestNews[0].title,
+            time: formatBengaliRelativeTime(latestNews[0].publish_at),
+            unique_code: latestNews[0].unique_code,
+            category_slug: latestNews[0].category_slug,
+            sub_category_slug: latestNews[0].sub_category_slug,
+          },
+          left: latestNews.slice(1, 3).map((item) => ({
+            image: item.feature_image_url,
+            title: item.title,
+            time: formatBengaliRelativeTime(item.publish_at),
+            unique_code: item.unique_code,
+            category_slug: item.category_slug,
+            sub_category_slug: item.sub_category_slug,
+          })),
+          right: latestNews.slice(3, 5).map((item) => ({
+            image: item.feature_image_url,
+            title: item.title,
+            time: formatBengaliRelativeTime(item.publish_at),
+            unique_code: item.unique_code,
+            category_slug: item.category_slug,
+            sub_category_slug: item.sub_category_slug,
+          })),
+        }
+      : null;
+
+  return (
+    <section className="mt-4 grid gap-5 lg:grid-cols-[240px_1fr_280px]">
+      {/* Left Column: Card-styled trend list */}
+      <aside className="hidden flex-col gap-3 lg:flex">
+        {leftStories.map((story, i) => (
+          <article
+            key={i}
+            className="group overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+          >
+            <Link
+              href={getNewsUrl(story)}
+              className="flex flex-col gap-2 p-2"
+            >
+              <div className="overflow-hidden rounded-lg bg-slate-100 shadow-inner">
+                <Image
+                  src={story.image || "/placeholder-news.jpg"}
+                  alt={story.title}
+                  width={240}
+                  height={160}
+                  className="aspect-3/2 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="px-1 py-1">
+                <h3 className="line-clamp-3 text-[14px] font-bold leading-snug text-slate-900 group-hover:text-[#b38716] transition-colors">
+                  {story.title}
+                </h3>
+              </div>
+            </Link>
+          </article>
+        ))}
+      </aside>
+
+      {/* Center Column */}
+      <div className="flex flex-col gap-5">
+        {/* Dual Highlight Area */}
+        <div className="grid gap-5 sm:grid-cols-2">
+          {featuredStories.map((story, i) => (
+            <article
+              key={i}
+              className="group overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-xl"
+            >
+              <Link
+                href={getNewsUrl(story)}
+                className="flex flex-col h-full"
+              >
+                <div className="relative overflow-hidden shrink-0">
+                  <Image
+                    src={story.image || "/placeholder-news.jpg"}
+                    alt={story.title}
+                    width={500}
+                    height={300}
+                    priority={i === 0}
+                    fetchPriority={i === 0 ? "high" : "auto"}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
+                    className="aspect-video w-full object-cover transition-transform duration-1000 group-hover:scale-[1.05]"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 flex justify-center p-3">
+                    <span className="rounded-full bg-white/95 px-4 py-1 text-[11px] font-black uppercase tracking-widest text-slate-900 shadow-lg backdrop-blur-sm ring-1 ring-slate-200/50">
+                      {story.category}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col items-center text-center gap-3 p-5 lg:p-6 pb-4">
+                  <h2 className="text-lg font-black leading-tight tracking-tight text-slate-900 group-hover:text-[#b38716] transition-colors md:text-xl lg:text-[22px] line-clamp-2 px-1">
+                    {story.title}
+                  </h2>
+
+                  <div className="flex items-center gap-3 justify-center">
+                    <div className="h-[1.5px] w-5 rounded-full bg-slate-100" />
+                    <div className="h-1 w-1 rounded-full bg-[#c79a1d]" />
+                    <div className="h-[1.5px] w-5 rounded-full bg-slate-100" />
+                  </div>
+
+                  <p className="line-clamp-2 text-[13px] md:text-[14px] leading-relaxed text-slate-600 font-medium">
+                    {story.excerpt}
+                  </p>
+
+                  <div className="mt-auto pt-2">
+                    <div className="flex items-center gap-1.5 justify-center bg-slate-50 px-3 py-1 rounded-full ring-1 ring-slate-100">
+                      <Clock className="h-3 w-3 text-slate-400" />
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {story.time}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
+
+        {/* Themed Topic Highlight Block (Iran-Israel Theme) */}
+        {topicData && (
+          <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm ring-1 ring-slate-50">
+            {/* Block Header */}
+            <div className="flex h-11 items-center justify-between bg-[#036735] px-4 text-white">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
+                <span className="text-[14px] font-black tracking-tight line-clamp-1">
+                  সর্বশেষ আপডেট
+                </span>
+              </div>
+              <Link
+                href="/news"
+                className="rounded bg-red-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-red-700 active:scale-95"
+              >
+                সব খবর
+              </Link>
+            </div>
+
+            {/* Block Grid */}
+            <div className="grid gap-4 p-4 lg:grid-cols-[1.2fr_2fr_1.2fr]">
+              {/* Left Column */}
+              <div className="flex flex-col gap-4">
+                {topicData.left.map((item, i) => (
+                  <article key={i} className="group flex flex-col gap-2">
+                    <Link
+                      href={getNewsUrl(item)}
+                      className="relative aspect-video overflow-hidden rounded-lg"
+                    >
+                      <Image
+                        fill
+                        src={item.image || "/placeholder-news.jpg"}
+                        alt={item.title}
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </Link>
+                    <h4 className="text-[12.5px] font-bold leading-tight line-clamp-2 group-hover:text-red-600 transition-colors uppercase">
+                      {item.title}
+                    </h4>
+                  </article>
+                ))}
+              </div>
+
+              {/* Middle (Main Focus) */}
+              <article className="group flex flex-col text-center">
+                <Link
+                  href={getNewsUrl(topicData.main)}
+                  className="flex flex-col h-full gap-4"
+                >
+                  <div className="relative aspect-16/10 overflow-hidden rounded-xl border border-slate-100">
+                    <Image
+                      fill
+                      src={topicData.main.image || "/placeholder-news.jpg"}
+                      alt={topicData.main.title}
+                      className="object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="space-y-1.5 px-2">
+                    <h3 className="text-[17px] font-black leading-tight text-slate-950 group-hover:text-red-600 transition-colors">
+                      {topicData.main.title}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <div className="h-1 w-1 rounded-full bg-red-600" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {topicData.main.time}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </article>
+
+              {/* Right Column */}
+              <div className="flex flex-col gap-4">
+                {topicData.right.map((item, i) => (
+                  <article key={i} className="group flex flex-col gap-2">
+                    <Link
+                      href={getNewsUrl(item)}
+                      className="relative aspect-video overflow-hidden rounded-lg"
+                    >
+                      <Image
+                        fill
+                        src={item.image || "/placeholder-news.jpg"}
+                        alt={item.title}
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </Link>
+                    <h4 className="text-[12.5px] font-bold leading-tight line-clamp-2 group-hover:text-red-600 transition-colors uppercase">
+                      {item.title}
+                    </h4>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2-Column Grid of mini-stories (Remaining) */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {centerGridStories.map((story, i) => (
+            <article
+              key={i}
+              className="group overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            >
+              <Link
+                href={getNewsUrl(story)}
+                className="flex gap-3 p-2.5"
+              >
+                <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 shadow-inner sm:h-20 sm:w-28">
+                  <Image
+                    src={story.image || "/placeholder-news.jpg"}
+                    alt={story.title}
+                    width={150}
+                    height={100}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                <h4 className="line-clamp-3 text-[13px] font-bold leading-tight text-slate-900 group-hover:text-[#b38716] transition-colors">
+                  {story.title}
+                </h4>
+              </Link>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      {/* Right Column: Sidebar */}
+      <aside className="flex flex-col gap-4">
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm ring-1 ring-slate-50">
+          {/* Hub Header */}
+          <div className="bg-[#036735] px-5 py-5 text-center relative overflow-hidden">
+            <h4 className="relative text-[18px] font-black uppercase tracking-[0.1em] text-amber-400 drop-shadow-md flex items-center justify-center gap-2">
+              Emergency Contact
+            </h4>
+          </div>
+
+          <div className="flex flex-col p-2 gap-2">
+            {utilitySections.map((section, idx) => (
+              <div key={idx} className="flex flex-col gap-1.5">
+                <div
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ${section.color} transition-all`}
+                >
+                  <span className="text-[13px] font-black tracking-tight">
+                    {section.name}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 px-1 mb-3">
+                  {section.links.map((link, lIdx) => {
+                    const gradient = btnGradients[(idx * 5 + lIdx) % btnGradients.length];
+                    return (
+                      <Link
+                        key={lIdx}
+                        href={link.href}
+                        className={`group relative flex grow items-center justify-between gap-2 px-2.5 py-2.5 rounded-full overflow-hidden shadow text-white transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-95 bg-gradient-to-r ${gradient}`}
+                      >
+                        {/* Glossy top reflection */}
+                        <div className="absolute top-0 inset-x-0 h-[45%] bg-gradient-to-b from-white/40 to-transparent pointer-events-none rounded-t-full"></div>
+                        
+                        <span className="relative z-10 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider pl-1 leading-tight drop-shadow-sm break-words whitespace-normal">
+                          {link.label}
+                        </span>
+                        
+                        <div className="relative z-10 shrink-0 bg-white/20 rounded-full p-[2px] ml-1 group-hover:bg-white/30 transition-colors shadow-inner">
+                           <Play className="h-2 w-2 sm:h-2.5 sm:w-2.5 fill-white text-white drop-shadow-sm" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Hub Footer */}
+          <div className="border-t border-slate-50 bg-slate-50/50 p-4 text-center">
+            <p className="text-[10px] font-bold text-slate-400">
+              আপডেট পেতে সাথে থাকুন
+            </p>
+          </div>
+        </div>
+
+        {/* Sidebar Ad Moved Below Hub */}
+        <AdBanner
+          label="[ বিজ্ঞাপন — ৩০০×২৫০ ]"
+          category="Home page"
+          placement="Sidebar Ad"
+          heightClass="h-[250px]"
+          fit="contain"
+          className="my-0"
+          initialAd={advertisements.find((ad) => ad.placement === "Sidebar Ad")}
+        />
+
+        {/* Video News Sidebar Section */}
+        {videoNews && videoNews.length > 0 && (
+          <div className="flex flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm ring-1 ring-slate-50">
+            <div className="bg-[#036735] px-5 py-3 text-center">
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-400">
+                Video News
+              </h4>
+            </div>
+            <div className="flex flex-col p-3 gap-4">
+              {videoNews.slice(0, 2).map((video, vIdx) => (
+                <Link
+                  key={vIdx}
+                  href={getNewsUrl(video)}
+                  className="group flex flex-col gap-2"
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-100">
+                    <Image
+                      src={video.youtube_thumbnail_url || video.feature_image_url || "/placeholder-news.jpg"}
+                      alt={video.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform group-hover:scale-110">
+                        <Play className="h-3 w-3 fill-red-600 text-red-600 ml-0.5" />
+                      </div>
+                    </div>
+                  </div>
+                  <h5 className="line-clamp-2 text-[13px] font-bold leading-snug text-slate-900 group-hover:text-red-600 transition-colors">
+                    {video.title}
+                  </h5>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Small Ad Slot at the bottom of Hub */}
+        <AdBanner
+          label="[ বিজ্ঞাপন — ৩০০×২৫০ ]"
+          category="Home page"
+          placement="Sidebar Bottom Ad"
+          heightClass="h-[150px]"
+          fit="contain"
+          className="my-0"
+          initialAd={advertisements.find((ad) => ad.placement === "Sidebar Bottom Ad")}
+        />
+      </aside>
+    </section>
+  );
+}
