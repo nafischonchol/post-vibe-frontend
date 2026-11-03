@@ -26,7 +26,7 @@ module.exports = {
       },
       {
         protocol: "https",
-        hostname: "api.shikkhapath.com",
+        hostname: "api.postvibe.com",
       },
       {
         protocol: "https",

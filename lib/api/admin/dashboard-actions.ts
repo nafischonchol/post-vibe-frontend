@@ -2,44 +2,23 @@
 
 import { fetchApi, rethrowNextErrors } from "../common";
 
-export type KpiCard = {
-  label: string;
-  value: number;
-  deltaLabel: string;
-  delta: number;
-  icon: string;
+export type AdminDashboardStats = {
+  totalTenants: number;
+  activeTenants: number;
+  suspendedTenants: number;
+  totalVideosCollected: number;
+  totalVideosProcessed: number;
+  totalPublishingBatches: number;
+  successfulUploads: number;
+  failedUploads: number;
+  aiTokensConsumed: number;
+  estimatedAiCost: number;
+  s3StorageMb: number;
+  queueBacklog: number;
+  failedJobs: number;
 };
 
-export type StatusSummary = {
-  label: string;
-  count: number;
-  colorClass: string;
-};
-
-export type ActivityItem = {
-  id: number;
-  name: string;
-  meta: string;
-  status: string;
-  createdAt: string;
-};
-
-export type DashboardStats = {
-  kpis: KpiCard[];
-  ambulanceStatus: StatusSummary[];
-  doctorStatus: StatusSummary[];
-  candidateStatus: StatusSummary[];
-  newsStatus: StatusSummary[];
-  policeStatus: StatusSummary[];
-  fireStationStatus: StatusSummary[];
-  jobPostStatus: StatusSummary[];
-  admissionStatus: StatusSummary[];
-  advertisementStatus: StatusSummary[];
-  recentServices: ActivityItem[];
-  recentApplications: ActivityItem[];
-};
-
-export async function getDashboardStats(): Promise<DashboardStats | null> {
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats | null> {
   try {
     const response = await fetchApi("/admin/dashboard-stats", {
       method: "GET",
@@ -54,7 +33,7 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     return data.resources || null;
   } catch (error) {
     rethrowNextErrors(error);
-    console.error("Failed to fetch dashboard stats:", error);
+    console.error("Failed to fetch admin dashboard stats:", error);
     return null;
   }
 }

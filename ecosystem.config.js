@@ -1,6 +1,6 @@
 module.exports = {
   apps : [{
-    name: "SHIKKHAPATH",
+    name: "POST-VIBE",
     script: "npm",
     args: "start",
     env: {

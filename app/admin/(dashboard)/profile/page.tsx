@@ -5,7 +5,7 @@ import { getProfile } from "@/lib/api/profile";
 import { ProfileForm } from "./profile-form";
 
 export const metadata = {
-  title: "Admin Profile | Shikkhapath",
+  title: "Admin Profile | Post-Vibe",
   description: "Manage your admin account profile and security settings.",
 };
 

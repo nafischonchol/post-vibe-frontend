@@ -1,17 +1,21 @@
-# Shikkhapath News Portal
+# Post-Vibe
 
-Shikkhapath is a Next.js 16 news portal with:
+Post-Vibe is a Next.js 16 SaaS platform for automated video syndication and publishing workflows.
 
-- A public customer-facing site for Bangla news content.
-- An admin area for authenticated management workflows.
+It includes:
+
+- A tenant-facing portal for managing source videos, publishing workflows, quotas, and analytics.
+- A platform admin area for monitoring and controlling the system.
+- AI-assisted metadata generation for multi-platform publishing across social video channels.
 
 ## Tech Stack
 
-- Next.js 16 (App Router)
+- Next.js 16
 - React 19
 - TypeScript
 - Tailwind CSS 4
 - ESLint 9
+- shadcn-style UI components
 
 ## Getting Started
 
@@ -21,50 +25,80 @@ Shikkhapath is a Next.js 16 news portal with:
 npm install
 ```
 
-2. Create an environment file:
+2. Create your local environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Set required variables in `.env.local`:
+3. Update `.env.local` with your local values:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 NODE_ENV=development
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+APP_URL=http://localhost:3000
+APP_NAME="Post-Vibe"
 ```
 
-4. Run the development server:
+4. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-5. Open `http://localhost:3000`.
+5. Open the app in the browser:
+
+```text
+http://localhost:3092
+```
 
 ## Available Scripts
 
-- `npm run dev`: Run dev server.
-- `npm run build`: Build production bundle.
-- `npm run start`: Start production server.
-- `npm run lint`: Run ESLint.
+- `npm run dev`: Start the Next.js development server on port `3092`.
+- `npm run build`: Create a production build.
+- `npm run start`: Start the production server on port `3092`.
+- `npm run lint`: Run ESLint checks.
 
 ## Project Structure
 
-- `app/(customer)`: Public website pages.
-- `app/admin/(auth)`: Admin authentication pages.
-- `app/admin/(dashboard)`: Admin dashboard pages and routes.
-- `components/customer`: Customer-facing UI components.
-- `components/admin`: Admin UI, forms, and layout components.
-- `lib/api`: Server-side API helper utilities.
-- `middleware.ts`: Auth guard logic for admin routes.
+```text
+frontend/
+├── app/
+│   ├── admin/              # Admin portal pages and dashboard routes
+│   ├── tenant/             # Tenant dashboard and management pages
+│   ├── login/              # Tenant login flow
+│   ├── page.tsx            # Marketing / landing page
+│   └── layout.tsx
+├── components/
+│   ├── admin/
+│   └── ui/
+├── hooks/
+├── lib/
+├── public/
+├── services/
+├── .env.example
+├── .env.local
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── tsconfig.json
+└── README.md
+```
 
-## Authentication Notes
+## App Access
 
-- Admin login stores an `admin_token` HTTP-only cookie.
-- Middleware protects `/admin` routes and redirects unauthorized users to `/admin/login`.
+- Tenant login: `/login`
+- Admin login: `/admin/login`
+- Default landing page: `/`
 
-## Deployment Notes
+## Notes
 
-- Ensure `NEXT_PUBLIC_API_BASE_URL` points to your live backend API.
-- Use HTTPS in production so secure cookie behavior works as expected.
+- The frontend is built for a Laravel/Backend API environment and expects the API base URL in `NEXT_PUBLIC_API_BASE_URL`.
+- The app uses the port `3092` in development and production startup scripts.
+- The project is designed for multi-tenant automated publishing workflows, including posting, quota tracking, source management, and analytics.
+
+## Deployment
+
+- Set `NEXT_PUBLIC_API_BASE_URL` to your production backend URL.
+- Ensure `APP_URL` matches the public frontend domain.
+- Use HTTPS in production for secure session behavior and correct cookie handling.

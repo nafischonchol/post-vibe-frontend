@@ -15,9 +15,9 @@ const notoSerifBengali = Noto_Serif_Bengali({
 });
 
 export const metadata: Metadata = {
-  title: "Shikkhapath",
+  title: "Post-Vibe: Automated Video Syndication SaaS",
   description:
-    "Shikkhapath-Modern News Portal is a cutting-edge news platform built with Next.js, designed to deliver the latest news and updates in a sleek and user-friendly interface. With its modern design and seamless navigation, Shikkhapath offers an engaging experience for users seeking up-to-date information on various topics. Stay informed with Shikkhapath's comprehensive coverage and intuitive features.z",
+    "Post-Vibe is a cutting-edge video syndication platform built with Next.js, designed to deliver the latest videos and updates in a sleek and user-friendly interface. With its modern design and seamless navigation, Post-Vibe offers an engaging experience for users seeking up-to-date information on various topics. Stay informed with Post-Vibe's comprehensive coverage and intuitive features.",
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",
