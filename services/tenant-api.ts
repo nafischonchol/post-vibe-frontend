@@ -1,11 +1,15 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
 
 async function request(path: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("tenant_token") : null;
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...authHeader,
       ...(options.headers || {}),
     },
   });
@@ -124,6 +128,14 @@ export const tenantApi = {
   getPlatformAccounts: async (token?: string) => {
     return request("/tenant/platform-accounts", {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  createPlatformAccount: async (payload: { platform: string; account_name: string; account_handle?: string }, token?: string) => {
+    return request("/tenant/platform-accounts", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify(payload),
     });
   },
 

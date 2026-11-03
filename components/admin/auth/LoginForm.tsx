@@ -28,6 +28,9 @@ export function LoginForm() {
         setError(data.error);
         return;
       }
+      if (data?.resources?.token) {
+        localStorage.setItem("admin_token", data.resources.token);
+      }
       router.push("/admin");
     } catch (err: any) {
       setError(

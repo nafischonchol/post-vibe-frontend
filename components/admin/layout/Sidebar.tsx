@@ -58,7 +58,7 @@ const menuConfig: MenuSection[] = [
     title: "System & Governance",
     items: [
       { title: "System Monitoring", icon: Activity, href: "/admin/monitoring" },
-      { title: "Admin Users", icon: Users, href: "/admin/users" },
+      { title: "Admin Users", icon: Users, href: "/admin/users/list" },
       { title: "Audit Logs", icon: ScrollText, href: "/admin/audit-logs" },
     ],
   },
@@ -79,6 +79,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const isLinkActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
+    if (href === "/admin/users/list") return pathname.startsWith("/admin/users");
     return pathname.startsWith(href);
   };
 

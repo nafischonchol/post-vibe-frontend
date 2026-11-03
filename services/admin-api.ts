@@ -1,11 +1,15 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
 
 async function request(path: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...authHeader,
       ...(options.headers || {}),
     },
   });
@@ -160,7 +164,7 @@ export const adminApi = {
     });
   },
 
-  testAiConnection: async (payload: { api_key?: string; default_model: string }, token?: string) => {
+  testAiConnection: async (payload: { provider?: string; api_key?: string; default_model?: string; model?: string }, token?: string) => {
     return request("/admin/ai-settings/test", {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
