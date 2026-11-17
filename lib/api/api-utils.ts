@@ -62,7 +62,7 @@ export function extractPagination(
   fallbackPage: number,
   fallbackper_page: number,
 ): BasePagination {
-  const pagination = payload?.pagination ?? {};
+  const pagination = payload?.meta ?? payload?.pagination ?? {};
   const current_page = Math.max(
     1,
     Number(pagination?.current_page ?? fallbackPage),
@@ -80,4 +80,90 @@ export function extractPagination(
     per_page: per_page,
     total: total,
   };
+}
+
+export function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+export function asString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return fallback;
+}
+
+export function asNumber(value: unknown, fallback = 0): number {
+  if (typeof value === "number" && !isNaN(value)) return value;
+  if (typeof value === "string") {
+    const num = Number(value);
+    if (!isNaN(num)) return num;
+  }
+  return fallback;
+}
+
+export function asBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "active"].includes(normalized)) return true;
+    if (["0", "false", "no", "inactive"].includes(normalized)) return false;
+  }
+  return fallback;
+}
+
+export function extractList(payload: unknown, resourceKey = "items"): unknown[] {
+  if (Array.isArray(payload)) return payload;
+
+  const root = asObject(payload);
+  if (Array.isArray(root.resources)) return root.resources;
+  if (Array.isArray(root.data)) return root.data;
+
+  const resources = asObject(root.resources);
+  const candidates = [
+    root[resourceKey],
+    resources[resourceKey],
+    resources.data,
+    resources.items,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+  }
+
+  return [];
+}
+
+export function extractOne(payload: unknown, resourceKey = "item"): unknown | null {
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    const root = payload as Record<string, unknown>;
+    if (root.id !== undefined) return root;
+  }
+
+  const root = asObject(payload);
+  const resources = asObject(root.resources);
+  const candidates = [
+    root[resourceKey],
+    root.data,
+    resources[resourceKey],
+    resources.data,
+    resources.item,
+    resources,
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      candidate &&
+      typeof candidate === "object" &&
+      !Array.isArray(candidate)
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
 }

@@ -11,6 +11,9 @@ import {
   RefreshCw,
   AlertCircle,
   Video,
+  Sparkles,
+  CheckCircle2,
+  DownloadCloud,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -35,6 +38,7 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<VideoSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // New source form modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -46,6 +50,12 @@ export default function SourcesPage() {
     source_url: "https://youtube.com/@creator_channel",
     scan_frequency: 60,
   });
+
+  // Direct Video Scraper Modal State
+  const [showScrapeModal, setShowScrapeModal] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scrapedResult, setScrapedResult] = useState<any>(null);
 
   const fetchSources = async () => {
     try {
@@ -78,11 +88,33 @@ export default function SourcesPage() {
         source_url: "https://youtube.com/@creator_channel",
         scan_frequency: 60,
       });
+      setSuccessMessage("Video source feed registered successfully.");
       await fetchSources();
     } catch (err: any) {
       setError(err?.message || "Failed to add video source.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDirectScrape = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scrapeUrl.trim()) return;
+
+    try {
+      setIsScraping(true);
+      setError(null);
+      setScrapedResult(null);
+
+      const res = await tenantApi.scrapeVideo(scrapeUrl.trim());
+      setScrapedResult(res.resources);
+      setSuccessMessage("Video successfully scraped and dispatched to ingestion pipeline!");
+      setScrapeUrl("");
+      await fetchSources();
+    } catch (err: any) {
+      setError(err?.message || "Failed to scrape video from URL.");
+    } finally {
+      setIsScraping(false);
     }
   };
 
@@ -103,6 +135,7 @@ export default function SourcesPage() {
     try {
       await tenantApi.deleteSource(id);
       setSources((prev) => prev.filter((s) => s.id !== id));
+      setSuccessMessage("Video source deleted.");
     } catch (err: any) {
       alert(err?.message || "Failed to delete source.");
     }
@@ -113,12 +146,12 @@ export default function SourcesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Video Sources</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Video Sources & Ingestion</h1>
           <p className="text-sm text-slate-500">
-            Configure social channels and pages to automatically discover and ingest content.
+            Configure social channels, profiles, or directly scrape TikTok, YouTube Shorts, and Instagram Reels.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
@@ -126,19 +159,43 @@ export default function SourcesPage() {
             disabled={loading}
             className="border-slate-200 text-slate-700 hover:bg-slate-50"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setScrapedResult(null);
+              setShowScrapeModal(true);
+            }}
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-medium"
+          >
+            <DownloadCloud className="h-4 w-4 mr-1.5 text-indigo-600" />
+            Scrape Video Link
           </Button>
           <Button
             size="sm"
             onClick={() => setShowAddModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Video Source
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Channel Feed
           </Button>
         </div>
       </div>
+
+      {successMessage && (
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span>{successMessage}</span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setSuccessMessage(null)} className="text-emerald-800">
+            Dismiss
+          </Button>
+        </div>
+      )}
 
       {error && (
         <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm flex items-center justify-between">
@@ -146,7 +203,7 @@ export default function SourcesPage() {
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
             <span>{error}</span>
           </div>
-          <Button size="sm" variant="ghost" onClick={fetchSources} className="text-rose-700 hover:bg-rose-100">
+          <Button size="sm" variant="ghost" onClick={() => setError(null)} className="text-rose-700 hover:bg-rose-100">
             Dismiss
           </Button>
         </div>
@@ -159,113 +216,193 @@ export default function SourcesPage() {
             Monitored Ingestion Feeds
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
-            Automated crawler queries sources on their designated scan frequency.
+            Sources polled on regular intervals by background scanner workers.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="py-12 text-center text-xs text-slate-400">Loading sources...</div>
-          ) : sources.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-400">
-              No video sources added yet. Click &quot;Add Video Source&quot; to begin.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-y border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/75 text-slate-500 font-medium">
+                  <th className="py-3 px-4">Source Name</th>
+                  <th className="py-3 px-4">Platform</th>
+                  <th className="py-3 px-4">Identifier / Target</th>
+                  <th className="py-3 px-4">Scan Interval</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Videos Found</th>
+                  <th className="py-3 px-4">Last Scanned</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {sources.length === 0 ? (
                   <tr>
-                    <th className="py-3 px-4">Source Name</th>
-                    <th className="py-3 px-4">Platform</th>
-                    <th className="py-3 px-4">Identifier / Link</th>
-                    <th className="py-3 px-4">Scan Rate</th>
-                    <th className="py-3 px-4">Collected</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <td colSpan={8} className="py-8 text-center text-slate-400">
+                      No video sources added yet. Click &quot;Scrape Video Link&quot; or &quot;Add Channel Feed&quot; to begin.
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {sources.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">{s.name}</div>
-                        <div className="text-[11px] text-slate-400">ID #{s.id}</div>
+                ) : (
+                  sources.map((source) => (
+                    <tr key={source.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-3 px-4 font-semibold text-slate-900">
+                        {source.name}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">
-                          {s.platform}
+                        <span className="capitalize px-2 py-0.5 rounded font-mono text-[11px] bg-slate-100 text-slate-700 border border-slate-200">
+                          {source.platform}
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                          <span>{s.source_identifier}</span>
-                          <a
-                            href={s.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-800"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
+                        <a
+                          href={source.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-indigo-600 hover:underline max-w-[200px] truncate"
+                        >
+                          <span>{source.source_identifier}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
                       </td>
-                      <td className="py-3 px-4 text-xs text-slate-600">
-                        Every {s.scan_frequency} mins
-                      </td>
-                      <td className="py-3 px-4 text-xs font-medium text-slate-800">
-                        {s.videos_count || 0} videos
+                      <td className="py-3 px-4 text-slate-500">
+                        Every {source.scan_frequency} mins
                       </td>
                       <td className="py-3 px-4">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium capitalize ${
-                            s.status === "active"
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            source.status === "active"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : "bg-amber-50 text-amber-700 border border-amber-200"
                           }`}
                         >
-                          {s.status}
+                          {source.status.toUpperCase()}
                         </span>
                       </td>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-900">
+                        {source.videos_count || 0}
+                      </td>
+                      <td className="py-3 px-4 text-slate-400">
+                        {source.last_scanned_at
+                          ? new Date(source.last_scanned_at).toLocaleString()
+                          : "Never"}
+                      </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleToggleStatus(s)}
-                            className="h-8 px-2 text-slate-600 hover:text-slate-900"
-                            title={s.status === "active" ? "Pause crawler" : "Resume crawler"}
+                            onClick={() => handleToggleStatus(source)}
+                            className="h-7 w-7 p-0 text-slate-500 hover:text-slate-800"
+                            title={source.status === "active" ? "Pause" : "Resume"}
                           >
-                            {s.status === "active" ? (
+                            {source.status === "active" ? (
                               <Pause className="h-3.5 w-3.5" />
                             ) : (
-                              <Play className="h-3.5 w-3.5" />
+                              <Play className="h-3.5 w-3.5 text-emerald-600" />
                             )}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteSource(s.id)}
-                            className="h-8 px-2 text-slate-400 hover:text-rose-600"
-                            title="Delete source"
+                            onClick={() => handleDeleteSource(source.id)}
+                            className="h-7 w-7 p-0 text-slate-500 hover:text-rose-600"
+                            title="Delete Source"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Add Source Modal Dialog */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+      {/* Scrape Single Video Link Modal */}
+      {showScrapeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-base font-semibold text-slate-900">Add New Video Source</h2>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-indigo-600" />
+                <h2 className="text-base font-semibold text-slate-900">Instant Video Scraper</h2>
+              </div>
+              <button
+                onClick={() => setShowScrapeModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Paste a public video or reel URL from TikTok, YouTube Shorts, or Instagram. The engine will scrape metadata, extract hashtags, resolve the media stream, and prepare AI syndication.
+            </p>
+
+            <form onSubmit={handleDirectScrape} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Video Link URL</Label>
+                <Input
+                  type="url"
+                  placeholder="https://www.tiktok.com/@user/video/... or https://youtube.com/shorts/..."
+                  value={scrapeUrl}
+                  onChange={(e) => setScrapeUrl(e.target.value)}
+                  required
+                />
+              </div>
+
+              {scrapedResult && (
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-xs space-y-1">
+                  <div className="font-semibold text-emerald-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span>Discovered: {scrapedResult.source_platform?.toUpperCase()} Video</span>
+                  </div>
+                  <p className="text-emerald-800 line-clamp-2">{scrapedResult.original_caption}</p>
+                  <div className="text-[11px] text-emerald-700 font-mono">
+                    Status: {scrapedResult.processing_status}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowScrapeModal(false)}
+                  className="border-slate-200 text-slate-700"
+                >
+                  Close
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isScraping}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                >
+                  {isScraping ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      Scraping Content...
+                    </>
+                  ) : (
+                    "Start Scraping"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Feed Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-semibold text-slate-900">Add Automated Video Feed</h2>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
@@ -276,89 +413,83 @@ export default function SourcesPage() {
 
             <form onSubmit={handleCreateSource} className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Source Name</Label>
+                <Label className="text-xs font-semibold text-slate-700">Source Display Name</Label>
                 <Input
                   type="text"
-                  placeholder="e.g. Daily Tech Highlights"
+                  placeholder="e.g. My Productivity Shorts"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Platform</Label>
-                  <select
-                    value={formData.platform}
-                    onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="youtube">YouTube</option>
-                    <option value="tiktok">TikTok</option>
-                    <option value="facebook">Facebook</option>
-                    <option value="instagram">Instagram</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">
-                    Scan Interval (Minutes)
-                  </Label>
-                  <Input
-                    type="number"
-                    min={15}
-                    max={1440}
-                    value={formData.scan_frequency}
-                    onChange={(e) =>
-                      setFormData({ ...formData, scan_frequency: parseInt(e.target.value) || 60 })
-                    }
-                    required
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Platform</Label>
+                <select
+                  value={formData.platform}
+                  onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                </select>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">
-                  Channel Handle / Identifier
-                </Label>
+                <Label className="text-xs font-semibold text-slate-700">Handle / Identifier</Label>
                 <Input
                   type="text"
-                  placeholder="@handle or channel ID"
+                  placeholder="@creator_channel"
                   value={formData.source_identifier}
-                  onChange={(e) =>
-                    setFormData({ ...formData, source_identifier: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, source_identifier: e.target.value })}
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Source URL</Label>
+                <Label className="text-xs font-semibold text-slate-700">Target Channel / Feed URL</Label>
                 <Input
                   type="url"
-                  placeholder="https://..."
+                  placeholder="https://youtube.com/@channel"
                   value={formData.source_url}
                   onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
                   required
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Scan Frequency (Minutes)</Label>
+                <Input
+                  type="number"
+                  min="15"
+                  max="1440"
+                  value={formData.scan_frequency}
+                  onChange={(e) =>
+                    setFormData({ ...formData, scan_frequency: parseInt(e.target.value) || 60 })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setShowAddModal(false)}
-                  disabled={isSubmitting}
+                  className="border-slate-200"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={isSubmitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
                 >
-                  {isSubmitting ? "Adding..." : "Save Source"}
+                  {isSubmitting ? "Adding..." : "Add Source Feed"}
                 </Button>
               </div>
             </form>

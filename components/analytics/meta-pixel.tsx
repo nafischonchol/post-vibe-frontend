@@ -17,12 +17,11 @@ interface MetaPixelProps {
 export function MetaPixel({ pixelId }: MetaPixelProps) {
   const pathname = usePathname();
   const isFirstRender = useRef(true);
-
-  if (!pixelId || !pixelId.trim()) return null;
-
-  const cleanId = pixelId.trim();
+  const cleanId = pixelId?.trim() || "";
 
   useEffect(() => {
+    if (!cleanId) return;
+
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -31,7 +30,9 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
     if (typeof window.fbq === "function") {
       window.fbq("track", "PageView");
     }
-  }, [pathname]);
+  }, [pathname, cleanId]);
+
+  if (!cleanId) return null;
 
   return (
     <>

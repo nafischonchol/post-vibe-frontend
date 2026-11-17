@@ -20,15 +20,15 @@ export const SITE_KEYWORDS = [
   "automated content syndication",
 ];
 
-export const getNewsMediaOrganizationSchema = () => {
+export const getOrganizationSchema = () => {
   const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? process.env.APP_NAME ?? "Post-Vibe";
   const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.postvibe.com";
 
   return {
-    "@type": ["Organization", "NewsMediaOrganization"],
+    "@type": "Organization",
     name: SITE_NAME,
     alternateName: "Post-Vibe",
-    foundingDate: "2026-05-01",
+    foundingDate: "2026-01-01",
     url: SITE_URL,
     logo: {
       "@type": "ImageObject",
@@ -43,41 +43,17 @@ export const getNewsMediaOrganizationSchema = () => {
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+8801704-052374",
         contactType: "customer service",
-        areaServed: "BD",
-        availableLanguage: ["bn", "en"],
+        availableLanguage: ["en", "bn"],
         email: "support@postvibe.com",
       },
-      {
-        "@type": "ContactPoint",
-        contactType: "sales",
-        email: "hello@postvibe.com",
-      },
-    ],
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Empire Talukder Dream, 22–23 Station Road",
-      addressLocality: "Tejgaon",
-      addressRegion: "Dhaka",
-      postalCode: "1215",
-      addressCountry: "BD",
-    },
-    employee: {
-      "@type": "Person",
-      name: "Nafis Chonchol",
-      jobTitle: "Developer",
-      sameAs: ["https://www.facebook.com/nafis.chonchol"],
-    },
-    publishingPrinciples: [
-      `${SITE_URL}/about`,
-      `${SITE_URL}/privacy`,
-      `${SITE_URL}/terms`,
     ],
   };
 };
 
-export const getWebSiteSchema = (menuCategories: any[] = []) => {
+export const getNewsMediaOrganizationSchema = getOrganizationSchema;
+
+export const getWebSiteSchema = (menuCategories: Array<{ title: string; slug: string }> = []) => {
   const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? process.env.APP_NAME ?? "Post-Vibe";
   const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.postvibe.com";
 
@@ -90,7 +66,7 @@ export const getWebSiteSchema = (menuCategories: any[] = []) => {
     keywords: SITE_KEYWORDS.join(", "),
     url: SITE_URL,
     copyrightHolder: {
-      "@type": "NewsMediaOrganization",
+      "@type": "Organization",
       name: SITE_NAME,
     },
     potentialAction: {

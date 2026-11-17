@@ -18,12 +18,11 @@ interface GoogleAnalyticsProps {
 export function GoogleAnalytics({ gaId }: GoogleAnalyticsProps) {
   const pathname = usePathname();
   const isFirstRender = useRef(true);
-
-  if (!gaId || !gaId.trim()) return null;
-
-  const cleanId = gaId.trim();
+  const cleanId = gaId?.trim() || "";
 
   useEffect(() => {
+    if (!cleanId) return;
+
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -35,6 +34,8 @@ export function GoogleAnalytics({ gaId }: GoogleAnalyticsProps) {
       });
     }
   }, [pathname, cleanId]);
+
+  if (!cleanId) return null;
 
   return (
     <>

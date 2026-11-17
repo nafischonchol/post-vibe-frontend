@@ -1,30 +1,33 @@
-import type { Metadata } from "next";
-import { Noto_Sans_Bengali, Noto_Serif_Bengali } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "@/app/globals.css";
 
-const notoSansBengali = Noto_Sans_Bengali({
-  variable: "--font-noto-sans-bengali",
-  subsets: ["bengali"],
-  display: "swap",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
-const notoSerifBengali = Noto_Serif_Bengali({
-  variable: "--font-noto-serif-bengali",
-  subsets: ["bengali"],
-  display: "swap",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: "Post-Vibe: Automated Video Syndication SaaS",
   description:
-    "Post-Vibe is a cutting-edge video syndication platform built with Next.js, designed to deliver the latest videos and updates in a sleek and user-friendly interface. With its modern design and seamless navigation, Post-Vibe offers an engaging experience for users seeking up-to-date information on various topics. Stay informed with Post-Vibe's comprehensive coverage and intuitive features.",
+    "Post-Vibe is an automated video syndication and social publishing SaaS platform for YouTube Shorts, TikTok, and Facebook Reels.",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
-
-import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -32,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn" className={`${notoSansBengali.variable} ${notoSerifBengali.variable}`}>
-      <body className={`font-sans antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster position="top-right" richColors />
       </body>

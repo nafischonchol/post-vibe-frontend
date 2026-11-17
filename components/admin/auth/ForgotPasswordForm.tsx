@@ -81,7 +81,7 @@ export function ForgotPasswordForm() {
           />
         </div>
         <p className="text-xs text-slate-500 mt-2 px-1">
-          We'll send you a link to reset your password.
+          We&apos;ll send you a link to reset your password.
         </p>
       </div>
 

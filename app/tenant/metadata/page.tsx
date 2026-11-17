@@ -326,7 +326,7 @@ function MetadataEditor() {
       {/* Platform Tabs & Editors */}
       <div className="space-y-4">
         {/* Tab Buttons */}
-        <div className="flex border-b border-slate-200 gap-2">
+        <div className="flex border-b border-slate-200 gap-2 overflow-x-auto whitespace-nowrap pb-px scrollbar-none">
           {[
             { id: "youtube", label: "YouTube Shorts / Video" },
             { id: "tiktok", label: "TikTok" },

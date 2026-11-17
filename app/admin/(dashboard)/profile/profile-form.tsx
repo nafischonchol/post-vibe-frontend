@@ -164,7 +164,7 @@ export function ProfileForm({ profile }: { profile: ProfileApiModel }) {
                       className={`pl-11 h-12 rounded-xl border-slate-200 bg-white shadow-xs transition-all focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 ${errors.password ? "border-rose-500 focus:ring-rose-500/10" : ""}`}
                     />
                   </div>
-                  <p className="text-[11px] text-slate-400 ml-1">Leave blank if you don't want to change</p>
+                  <p className="text-[11px] text-slate-400 ml-1">Leave blank if you don&apos;t want to change</p>
                   {errors.password && (
                     <p className="text-xs font-medium text-rose-500 ml-1">{errors.password[0]}</p>
                   )}

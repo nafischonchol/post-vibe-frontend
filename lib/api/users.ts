@@ -1,6 +1,15 @@
 import "server-only";
 
-import { extractPagination, fetchApi, type BasePagination } from "./common";
+import {
+  extractPagination,
+  fetchApi,
+  asObject,
+  asString,
+  asBoolean,
+  extractList,
+  extractOne,
+  type BasePagination,
+} from "./common";
 
 export type UserApiModel = {
   id: string;
@@ -25,30 +34,6 @@ export type UsersListResult = {
   pagination: BasePagination;
 };
 
-function asObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function asString(value: unknown, fallback = ""): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
-  return fallback;
-}
-
-function asBoolean(value: unknown, fallback = false): boolean {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "number") return value === 1;
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["1", "true", "yes", "active"].includes(normalized)) return true;
-    if (["0", "false", "no", "inactive"].includes(normalized)) return false;
-  }
-
-  return fallback;
-}
-
 function normalizeUser(value: unknown): UserApiModel {
   const item = asObject(value);
   const role = asObject(item.role);
@@ -63,61 +48,6 @@ function normalizeUser(value: unknown): UserApiModel {
     role_name: asString(item.role_name ?? role.name),
     can_manage_news: asBoolean(item.can_manage_news, false),
   };
-}
-
-function extractList(payload: unknown): unknown[] {
-  if (Array.isArray(payload)) return payload;
-
-  const root = asObject(payload);
-  if (Array.isArray(root.resources)) return root.resources;
-
-  const resources = asObject(root.resources);
-  const candidates = [
-    root.data,
-    root.users,
-    resources.users,
-    resources.data,
-    resources.items,
-    resources,
-  ];
-
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) {
-      return candidate;
-    }
-  }
-
-  return [];
-}
-
-function extractOne(payload: unknown): unknown | null {
-  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
-    const root = payload as Record<string, unknown>;
-    if (root.id !== undefined) return root;
-  }
-
-  const root = asObject(payload);
-  const resources = asObject(root.resources);
-  const candidates = [
-    root.user,
-    root.data,
-    resources.user,
-    resources.data,
-    resources.item,
-    resources,
-  ];
-
-  for (const candidate of candidates) {
-    if (
-      candidate &&
-      typeof candidate === "object" &&
-      !Array.isArray(candidate)
-    ) {
-      return candidate;
-    }
-  }
-
-  return null;
 }
 
 export async function getUsersList(

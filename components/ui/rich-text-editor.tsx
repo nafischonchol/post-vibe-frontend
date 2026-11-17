@@ -138,7 +138,8 @@ export function RichTextEditor({
 
   const handleModalSubmit = () => {
     if (modal.type === "link") {
-      let { url, alt } = modal;
+      let url = modal.url;
+      const alt = modal.alt;
       if (url === "") {
         editor.chain().focus().extendMarkRange("link").unsetLink().run();
       } else {

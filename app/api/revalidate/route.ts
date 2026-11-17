@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: "Tag is required" }, { status: 400 });
   }
 
-  revalidateTag(tag, "max");
+  revalidateTag(tag, "default");
 
   return NextResponse.json({ revalidated: true, now: Date.now(), tag });
 }

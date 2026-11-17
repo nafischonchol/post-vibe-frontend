@@ -4,10 +4,28 @@ import { cookies, headers } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { type BasePagination, type FieldErrors } from "./api-utils";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+  if (envUrl.endsWith("/api/v1")) return envUrl;
+  if (envUrl.endsWith("/api")) return `${envUrl}/v1`;
+  return `${envUrl.replace(/\/$/, "")}/api/v1`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export { type BasePagination, type FieldErrors };
-export { extractPagination, extractFieldErrors, normalizeImageUrl, parseStringArray } from "./api-utils";
+export {
+  extractPagination,
+  extractFieldErrors,
+  normalizeImageUrl,
+  parseStringArray,
+  asObject,
+  asString,
+  asNumber,
+  asBoolean,
+  extractList,
+  extractOne,
+} from "./api-utils";
 
 export async function getAdminToken() {
   try {

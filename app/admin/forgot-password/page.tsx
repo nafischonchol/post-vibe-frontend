@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
             Forgot Password?
           </h1>
           <p className="text-slate-400 text-sm sm:text-base">
-            No worries, we'll send you reset instructions.
+            No worries, we&apos;ll send you reset instructions.
           </p>
         </div>
 

@@ -1,4 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+  if (envUrl.endsWith("/api/v1")) return envUrl;
+  if (envUrl.endsWith("/api")) return `${envUrl}/v1`;
+  return `${envUrl.replace(/\/$/, "")}/api/v1`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 async function request(path: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("tenant_token") : null;
@@ -80,6 +87,14 @@ export const tenantApi = {
     });
   },
 
+  scrapeVideo: async (url: string, sourceId?: number, token?: string) => {
+    return request("/tenant/sources/scrape-video", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify({ url, source_id: sourceId }),
+    });
+  },
+
   // Videos
   getVideos: async (params?: Record<string, string>, token?: string) => {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
@@ -142,6 +157,12 @@ export const tenantApi = {
   disconnectPlatformAccount: async (id: number, token?: string) => {
     return request(`/tenant/platform-accounts/${id}`, {
       method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  getOAuthRedirectUrl: async (platform: string, token?: string) => {
+    return request(`/tenant/platform-accounts/oauth/${platform}/redirect`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   },

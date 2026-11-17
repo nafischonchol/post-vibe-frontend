@@ -51,7 +51,7 @@ export function UserForm({
   mode,
   userId,
   initialValues,
-  roleOptions,
+  roleOptions: _roleOptions,
   showDetailsHeader = true,
   headerTitle,
   headerAction,

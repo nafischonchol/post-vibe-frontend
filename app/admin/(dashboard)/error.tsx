@@ -24,7 +24,7 @@ export default function GlobalError({
         Server is not responding
       </h2>
       <p className="mb-8 max-w-md text-slate-500 leading-relaxed">
-        We're having trouble connecting to our servers right now. Please check your internet connection or try again later.
+        We&apos;re having trouble connecting to our servers right now. Please check your internet connection or try again later.
       </p>
       <button
         onClick={() => reset()}

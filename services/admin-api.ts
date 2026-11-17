@@ -1,4 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+  if (envUrl.endsWith("/api/v1")) return envUrl;
+  if (envUrl.endsWith("/api")) return `${envUrl}/v1`;
+  return `${envUrl.replace(/\/$/, "")}/api/v1`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 async function request(path: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;

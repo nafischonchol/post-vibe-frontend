@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Share2,
   Plus,
@@ -11,6 +12,7 @@ import {
   RefreshCw,
   ExternalLink,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -30,14 +32,23 @@ interface PlatformAccount {
   last_validated_at: string | null;
 }
 
-export default function PlatformAccountsPage() {
+function PlatformAccountsContent() {
+  const searchParams = useSearchParams();
+  const connectedParam = searchParams.get("connected");
+  const accountParam = searchParams.get("account");
+  const errorParam = searchParams.get("error");
+
   const [accounts, setAccounts] = useState<PlatformAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(errorParam);
+  const [successMessage, setSuccessMessage] = useState<string | null>(
+    connectedParam ? `Successfully connected ${connectedParam.toUpperCase()}${accountParam ? ` (${accountParam})` : ""}!` : null
+  );
 
   // Connect modal
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectingOAuth, setConnectingOAuth] = useState<string | null>(null);
   const [connectForm, setConnectForm] = useState({
     platform: "youtube",
     account_name: "",
@@ -61,7 +72,23 @@ export default function PlatformAccountsPage() {
     fetchAccounts();
   }, []);
 
-  const handleConnect = async (e: React.FormEvent) => {
+  const handleOAuthConnect = async (platform: string) => {
+    try {
+      setConnectingOAuth(platform);
+      setError(null);
+      const res = await tenantApi.getOAuthRedirectUrl(platform);
+      if (res?.authorization_url) {
+        window.location.href = res.authorization_url;
+      } else {
+        throw new Error("Failed to generate OAuth authorization redirect.");
+      }
+    } catch (err: any) {
+      setError(err?.message || `Failed to initiate ${platform} OAuth.`);
+      setConnectingOAuth(null);
+    }
+  };
+
+  const handleManualConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
@@ -69,6 +96,7 @@ export default function PlatformAccountsPage() {
       await tenantApi.createPlatformAccount(connectForm);
       setShowModal(false);
       setConnectForm({ platform: "youtube", account_name: "", account_handle: "" });
+      setSuccessMessage(`Connected ${connectForm.account_name} successfully.`);
       await fetchAccounts();
     } catch (err: any) {
       setError(err?.message || "Failed to link platform account.");
@@ -82,6 +110,7 @@ export default function PlatformAccountsPage() {
     try {
       await tenantApi.disconnectPlatformAccount(id);
       setAccounts((prev) => prev.filter((a) => a.id !== id));
+      setSuccessMessage("Account disconnected successfully.");
     } catch (err: any) {
       alert(err?.message || "Failed to disconnect account.");
     }
@@ -127,13 +156,25 @@ export default function PlatformAccountsPage() {
         </div>
       </div>
 
+      {successMessage && (
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span>{successMessage}</span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setSuccessMessage(null)} className="text-emerald-800">
+            Dismiss
+          </Button>
+        </div>
+      )}
+
       {error && (
         <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
             <span>{error}</span>
           </div>
-          <Button size="sm" variant="ghost" onClick={fetchAccounts} className="text-rose-700">
+          <Button size="sm" variant="ghost" onClick={() => setError(null)} className="text-rose-700">
             Dismiss
           </Button>
         </div>
@@ -159,7 +200,7 @@ export default function PlatformAccountsPage() {
                   {p.name}
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500">
-                  Direct API publishing with automated token refresh.
+                  Direct API publishing with automated OAuth refresh.
                 </CardDescription>
               </CardHeader>
 
@@ -179,30 +220,50 @@ export default function PlatformAccountsPage() {
                           <div className="text-xs font-semibold text-slate-900 truncate">
                             {acc.account_name}
                           </div>
-                          <div className="text-[11px] text-slate-500 truncate">
+                          <div className="text-[11px] text-slate-400 font-mono truncate">
                             {acc.account_handle}
                           </div>
-                          <div className="flex items-center gap-1 text-[10px] text-emerald-600">
-                            <ShieldCheck className="h-3 w-3" />
-                            <span>Valid Auth Token</span>
-                          </div>
+                          {acc.token_expires_at && (
+                            <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                              <Clock className="h-2.5 w-2.5" />
+                              <span>Valid until {new Date(acc.token_expires_at).toLocaleDateString()}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDisconnect(acc.id)}
-                          className="h-7 px-2 text-slate-400 hover:text-rose-600"
-                          title="Disconnect"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                            <CheckCircle2 className="h-2.5 w-2.5" />
+                            Active
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDisconnect(acc.id)}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-1.5">
+                  <Button
+                    size="sm"
+                    disabled={connectingOAuth === p.id}
+                    onClick={() => handleOAuthConnect(p.id)}
+                    className="w-full text-xs h-8 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    {connectingOAuth === p.id ? (
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" />
+                    ) : (
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    Connect with OAuth
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -210,10 +271,9 @@ export default function PlatformAccountsPage() {
                       setConnectForm({ platform: p.id, account_name: "", account_handle: "" });
                       setShowModal(true);
                     }}
-                    className="w-full text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                    className="w-full text-xs h-7 border-slate-200 text-slate-500 hover:bg-slate-50"
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    Link {p.id.toUpperCase()} Account
+                    Manual / Mock Link
                   </Button>
                 </div>
               </CardContent>
@@ -226,7 +286,7 @@ export default function PlatformAccountsPage() {
       <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-xs text-slate-600 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-semibold text-slate-900">Encrypted Token Storage</span>
+          <span className="font-semibold text-slate-900">Encrypted OAuth Token Storage</span>
           <p className="text-slate-500 leading-relaxed">
             All OAuth access and refresh tokens are encrypted at rest using AES-256-CBC via Laravel&apos;s encryption layer. Scheduled background workers inspect token expiration and automatically trigger renewal prior to video publication.
           </p>
@@ -235,8 +295,8 @@ export default function PlatformAccountsPage() {
 
       {/* Connect Account Modal Dialog */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-semibold text-slate-900">Connect Platform Account</h2>
               <button
@@ -247,7 +307,24 @@ export default function PlatformAccountsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleConnect} className="space-y-4">
+            <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs text-indigo-900 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-600 shrink-0" />
+                <span>Quick connect via official OAuth authorization:</span>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setShowModal(false);
+                  handleOAuthConnect(connectForm.platform);
+                }}
+                className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                OAuth Login
+              </Button>
+            </div>
+
+            <form onSubmit={handleManualConnect} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Platform</Label>
                 <select
@@ -273,7 +350,7 @@ export default function PlatformAccountsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Handle / Page Username</Label>
+                <Label className="text-xs font-semibold text-slate-700">Account Handle</Label>
                 <Input
                   type="text"
                   placeholder="@acmetech"
@@ -282,21 +359,23 @@ export default function PlatformAccountsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setShowModal(false)}
-                  disabled={isSubmitting}
+                  className="border-slate-200"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={isSubmitting}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
-                  {isSubmitting ? "Linking..." : "Connect Account"}
+                  {isSubmitting ? "Linking..." : "Save Account"}
                 </Button>
               </div>
             </form>
@@ -304,5 +383,13 @@ export default function PlatformAccountsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PlatformAccountsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading platform accounts...</div>}>
+      <PlatformAccountsContent />
+    </Suspense>
   );
 }

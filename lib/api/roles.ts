@@ -1,6 +1,16 @@
 import "server-only";
 
-import { extractPagination, fetchApi, type BasePagination } from "./common";
+import {
+  extractPagination,
+  fetchApi,
+  asObject,
+  asString,
+  asNumber,
+  asBoolean,
+  extractList,
+  extractOne,
+  type BasePagination,
+} from "./common";
 
 export type RoleApiModel = {
   id: string;
@@ -20,36 +30,6 @@ export type RolesListResult = {
   pagination: BasePagination;
 };
 
-function asObject(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object"
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function asString(value: unknown, fallback = ""): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
-  return fallback;
-}
-
-function asBoolean(value: unknown, fallback = true): boolean {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "number") return value === 1;
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["1", "true", "yes", "active"].includes(normalized)) return true;
-    if (["0", "false", "no", "inactive"].includes(normalized)) return false;
-  }
-
-  return fallback;
-}
-
-function asNumber(value: unknown, fallback = 0): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return parsed;
-}
-
 function normalizeRole(value: unknown): RoleApiModel {
   const item = asObject(value);
 
@@ -63,61 +43,6 @@ function normalizeRole(value: unknown): RoleApiModel {
       0,
     ),
   };
-}
-
-function extractList(payload: unknown): unknown[] {
-  if (Array.isArray(payload)) return payload;
-
-  const root = asObject(payload);
-  if (Array.isArray(root.resources)) return root.resources;
-
-  const resources = asObject(root.resources);
-  const candidates = [
-    root.data,
-    root.roles,
-    resources.roles,
-    resources.data,
-    resources.items,
-    resources,
-  ];
-
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) {
-      return candidate;
-    }
-  }
-
-  return [];
-}
-
-function extractOne(payload: unknown): unknown | null {
-  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
-    const root = payload as Record<string, unknown>;
-    if (root.id !== undefined) return root;
-  }
-
-  const root = asObject(payload);
-  const resources = asObject(root.resources);
-  const candidates = [
-    root.role,
-    root.data,
-    resources.role,
-    resources.data,
-    resources.item,
-    resources,
-  ];
-
-  for (const candidate of candidates) {
-    if (
-      candidate &&
-      typeof candidate === "object" &&
-      !Array.isArray(candidate)
-    ) {
-      return candidate;
-    }
-  }
-
-  return null;
 }
 
 export async function getRolesList(
