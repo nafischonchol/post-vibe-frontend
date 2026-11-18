@@ -160,7 +160,13 @@ export const tenantApi = {
     });
   },
 
-  createPlatformAccount: async (payload: { platform: string; account_name: string; account_handle?: string }, token?: string) => {
+  createPlatformAccount: async (payload: {
+    platform: string;
+    account_name: string;
+    account_handle?: string;
+    access_token?: string;
+    refresh_token?: string;
+  }, token?: string) => {
     return request("/tenant/platform-accounts", {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},

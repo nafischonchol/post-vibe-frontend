@@ -53,6 +53,8 @@ function PlatformAccountsContent() {
     platform: "youtube",
     account_name: "",
     account_handle: "",
+    access_token: "",
+    refresh_token: "",
   });
 
   const fetchAccounts = async () => {
@@ -93,9 +95,17 @@ function PlatformAccountsContent() {
     try {
       setIsSubmitting(true);
       setError(null);
-      await tenantApi.createPlatformAccount(connectForm);
+
+      const payload = {
+        platform: connectForm.platform,
+        account_name: connectForm.account_name,
+        account_handle: connectForm.account_handle || undefined,
+        ...(connectForm.access_token.trim() ? { access_token: connectForm.access_token.trim() } : {}),
+        ...(connectForm.refresh_token.trim() ? { refresh_token: connectForm.refresh_token.trim() } : {}),
+      };
+      await tenantApi.createPlatformAccount(payload);
       setShowModal(false);
-      setConnectForm({ platform: "youtube", account_name: "", account_handle: "" });
+      setConnectForm({ platform: "youtube", account_name: "", account_handle: "", access_token: "", refresh_token: "" });
       setSuccessMessage(`Connected ${connectForm.account_name} successfully.`);
       await fetchAccounts();
     } catch (err: any) {
@@ -268,12 +278,12 @@ function PlatformAccountsContent() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setConnectForm({ platform: p.id, account_name: "", account_handle: "" });
+                      setConnectForm({ platform: p.id, account_name: "", account_handle: "", access_token: "", refresh_token: "" });
                       setShowModal(true);
                     }}
                     className="w-full text-xs h-7 border-slate-200 text-slate-500 hover:bg-slate-50"
                   >
-                    Manual / Mock Link
+                    Add API Credentials
                   </Button>
                 </div>
               </CardContent>
@@ -356,6 +366,33 @@ function PlatformAccountsContent() {
                   placeholder="@acmetech"
                   value={connectForm.account_handle}
                   onChange={(e) => setConnectForm({ ...connectForm, account_handle: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">
+                  Access Token <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  type="password"
+                  placeholder="Enter valid platform access token"
+                  value={connectForm.access_token}
+                  onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
+                  autoComplete="off"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">
+                  Refresh Token <span className="font-normal text-slate-400">(optional)</span>
+                </Label>
+                <Input
+                  type="password"
+                  placeholder="Enter refresh token"
+                  value={connectForm.refresh_token}
+                  onChange={(e) => setConnectForm({ ...connectForm, refresh_token: e.target.value })}
+                  autoComplete="off"
                 />
               </div>
 
