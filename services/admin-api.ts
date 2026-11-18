@@ -74,6 +74,20 @@ export const adminApi = {
     });
   },
 
+  approveTenant: async (id: number, token?: string) => {
+    return request(`/admin/tenants/${id}/approve`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  rejectTenant: async (id: number, token?: string) => {
+    return request(`/admin/tenants/${id}/reject`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
   suspendTenant: async (id: number, token?: string) => {
     return request(`/admin/tenants/${id}/suspend`, {
       method: "POST",

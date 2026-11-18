@@ -30,6 +30,20 @@ async function request(path: string, options: RequestInit = {}) {
 
 export const tenantApi = {
   // Authentication & Profile
+  register: async (payload: {
+    name: string;
+    email: string;
+    owner_name: string;
+    owner_email: string;
+    owner_password: string;
+    timezone?: string;
+  }) => {
+    return request("/tenant/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   login: async (credentials: { email: string; password: string }) => {
     return request("/tenant/login", {
       method: "POST",

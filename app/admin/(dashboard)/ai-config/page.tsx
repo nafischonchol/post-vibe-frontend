@@ -133,7 +133,7 @@ export default function AiConfigPage() {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+      <form onSubmit={handleSave} className="space-y-6 w-full">
         <Card className="border-slate-200 shadow-xs bg-white">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold text-slate-900">

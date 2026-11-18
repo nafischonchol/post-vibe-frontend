@@ -104,7 +104,7 @@ export default function GlobalSettingsPage() {
         </div>
       )}
 
-      <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+      <form onSubmit={handleSave} className="space-y-6 w-full">
         {/* AI Processing Settings */}
         <Card className="border-slate-200 shadow-xs bg-white">
           <CardHeader className="pb-3">

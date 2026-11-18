@@ -12,6 +12,7 @@ import {
   Sliders,
   AlertCircle,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -20,18 +21,28 @@ import { Label } from "@/components/admin/ui/label";
 import { PageHeader } from "@/components/admin/ui/page-header";
 import { adminApi } from "@/services/admin-api";
 
+interface PlanItem {
+  id: number;
+  name: string;
+  slug: string;
+  global_daily_quota?: number;
+}
+
 interface TenantItem {
   id: number;
   name: string;
   slug: string;
   email: string;
-  status: "active" | "suspended" | "pending";
+  status: "active" | "suspended" | "pending" | "rejected";
   timezone: string;
   created_at: string;
   subscription?: {
+    id?: number;
+    plan_id?: number;
     plan?: {
+      id?: number;
       name: string;
-      tier: string;
+      tier?: string;
     };
   };
   videos_count?: number;
@@ -40,6 +51,7 @@ interface TenantItem {
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<TenantItem[]>([]);
+  const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +71,18 @@ export default function TenantsPage() {
     owner_name: "",
     owner_email: "",
     owner_password: "password123",
+  });
+
+  // Edit Tenant Modal
+  const [editingTenant, setEditingTenant] = useState<TenantItem | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    timezone: "Asia/Dhaka",
+    status: "active" as "active" | "suspended" | "pending" | "rejected",
+    plan_id: "",
   });
 
   // Quota Override Modal
@@ -89,10 +113,98 @@ export default function TenantsPage() {
     fetchTenants();
   }, [page, statusFilter]);
 
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const res = await adminApi.getPlans();
+        if (res?.resources) {
+          setPlans(res.resources);
+        }
+      } catch (err) {
+        console.error("Failed to load subscription plans", err);
+      }
+    };
+    loadPlans();
+  }, []);
+
+  const handleOpenEdit = (tenant: TenantItem) => {
+    setEditingTenant(tenant);
+    setUpdateError(null);
+    setEditForm({
+      name: tenant.name,
+      email: tenant.email,
+      timezone: tenant.timezone || "Asia/Dhaka",
+      status: tenant.status,
+      plan_id: tenant.subscription?.plan?.id
+        ? String(tenant.subscription.plan.id)
+        : tenant.subscription?.plan_id
+        ? String(tenant.subscription.plan_id)
+        : "",
+    });
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTenant) return;
+    try {
+      setIsUpdating(true);
+      setUpdateError(null);
+      const payload: Record<string, any> = {
+        name: editForm.name,
+        email: editForm.email,
+        timezone: editForm.timezone,
+        status: editForm.status,
+      };
+      if (editForm.plan_id) {
+        payload.plan_id = parseInt(editForm.plan_id, 10);
+      }
+      const res = await adminApi.updateTenant(editingTenant.id, payload);
+      const updatedTenant = res?.resources;
+      if (updatedTenant) {
+        setTenants((prev) =>
+          prev.map((t) => (t.id === editingTenant.id ? { ...t, ...updatedTenant } : t))
+        );
+      } else {
+        await fetchTenants();
+      }
+      setEditingTenant(null);
+    } catch (err: any) {
+      setUpdateError(err?.message || "Failed to update workspace.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
     fetchTenants();
+  };
+
+  const handleApprove = async (tenant: TenantItem) => {
+    if (!confirm(`Are you sure you want to approve workspace "${tenant.name}"?`)) return;
+
+    try {
+      await adminApi.approveTenant(tenant.id);
+      setTenants((prev) =>
+        prev.map((t) => (t.id === tenant.id ? { ...t, status: "active" } : t))
+      );
+    } catch (err: any) {
+      alert(err?.message || "Failed to approve tenant.");
+    }
+  };
+
+  const handleReject = async (tenant: TenantItem) => {
+    if (!confirm(`Are you sure you want to reject workspace "${tenant.name}"?`)) return;
+
+    try {
+      await adminApi.rejectTenant(tenant.id);
+      setTenants((prev) =>
+        prev.map((t) => (t.id === tenant.id ? { ...t, status: "rejected" } : t))
+      );
+    } catch (err: any) {
+      alert(err?.message || "Failed to reject tenant.");
+    }
   };
 
   const handleToggleStatus = async (tenant: TenantItem) => {
@@ -219,11 +331,13 @@ export default function TenantsPage() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
         >
           <option value="">All Statuses</option>
-          <option value="active">Active Only</option>
-          <option value="suspended">Suspended Only</option>
+          <option value="pending">Pending Approval</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
 
@@ -273,10 +387,14 @@ export default function TenantsPage() {
                           className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${
                             t.status === "active"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : t.status === "pending"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : t.status === "rejected"
+                              ? "bg-slate-100 text-slate-700 border-slate-300"
                               : "bg-rose-50 text-rose-700 border-rose-200"
                           }`}
                         >
-                          {t.status}
+                          {t.status === "pending" ? "Pending Approval" : t.status}
                         </span>
                       </td>
 
@@ -285,40 +403,73 @@ export default function TenantsPage() {
                       </td>
 
                       <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {t.status === "pending" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(t)}
+                                className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                                title="Approve Workspace"
+                              >
+                                <CheckCircle2 className="h-3 w-3 mr-1" /> Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReject(t)}
+                                className="h-7 px-2.5 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 font-medium"
+                                title="Reject Workspace"
+                              >
+                                <Ban className="h-3 w-3 mr-1" /> Reject
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setOverrideModalTenant(t);
+                                  setGlobalDailyQuota(100);
+                                }}
+                                className="h-7 px-2 text-xs border-slate-200 text-slate-600"
+                                title="Custom Quota Override"
+                              >
+                                <Sliders className="h-3 w-3 mr-1" />
+                                Quota
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleStatus(t)}
+                                className={`h-7 px-2 text-xs font-medium ${
+                                  t.status === "active"
+                                    ? "text-rose-600 hover:bg-rose-50"
+                                    : "text-emerald-600 hover:bg-emerald-50"
+                                }`}
+                              >
+                                {t.status === "active" ? (
+                                  <>
+                                    <Ban className="h-3 w-3 mr-1" /> Suspend
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-3 w-3 mr-1" /> Activate
+                                  </>
+                                )}
+                              </Button>
+                            </>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setOverrideModalTenant(t);
-                              setGlobalDailyQuota(100);
-                            }}
-                            className="h-7 px-2 text-xs border-slate-200 text-slate-600"
-                            title="Custom Quota Override"
+                            onClick={() => handleOpenEdit(t)}
+                            className="h-7 px-2 text-xs border-slate-200 text-slate-700 hover:bg-slate-100 font-medium"
+                            title="Edit Workspace"
                           >
-                            <Sliders className="h-3 w-3 mr-1" />
-                            Quota
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleStatus(t)}
-                            className={`h-7 px-2 text-xs ${
-                              t.status === "active"
-                                ? "text-rose-600 hover:bg-rose-50"
-                                : "text-emerald-600 hover:bg-emerald-50"
-                            }`}
-                          >
-                            {t.status === "active" ? (
-                              <>
-                                <Ban className="h-3 w-3 mr-1" /> Suspend
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="h-3 w-3 mr-1" /> Activate
-                              </>
-                            )}
+                            <Pencil className="h-3 w-3 mr-1" /> Edit
                           </Button>
                         </div>
                       </td>
@@ -489,6 +640,129 @@ export default function TenantsPage() {
                 </Button>
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                   Save Override
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Tenant Modal */}
+      {editingTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Edit Workspace</h2>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">{editingTenant.slug}</p>
+              </div>
+              <button
+                onClick={() => setEditingTenant(null)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {updateError && (
+              <div className="p-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                <span>{updateError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Workspace Name</Label>
+                  <Input
+                    type="text"
+                    placeholder="Workspace Name"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Organization Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="contact@company.com"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Timezone</Label>
+                  <select
+                    value={editForm.timezone}
+                    onChange={(e) => setEditForm({ ...editForm, timezone: e.target.value })}
+                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">America/New_York (EST)</option>
+                    <option value="Europe/London">Europe/London (GMT)</option>
+                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                    <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                    <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                    <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Workspace Status</Label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
+                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium capitalize"
+                  >
+                    <option value="active">Active</option>
+                    <option value="pending">Pending Approval</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Subscription Plan</Label>
+                <select
+                  value={editForm.plan_id}
+                  onChange={(e) => setEditForm({ ...editForm, plan_id: e.target.value })}
+                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                >
+                  <option value="">Keep Existing / None</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} {p.global_daily_quota ? `(${p.global_daily_quota} videos/day)` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingTenant(null)}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </form>

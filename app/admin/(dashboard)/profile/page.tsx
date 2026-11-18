@@ -26,7 +26,7 @@ export default async function ProfilePage() {
         ]}
       />
 
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full">
         <ProfileForm profile={profile} />
       </div>
     </div>

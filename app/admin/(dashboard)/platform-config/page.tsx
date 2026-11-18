@@ -148,7 +148,7 @@ export default function PlatformConfigPage() {
       )}
 
       {/* 3 OAuth Platform Config Cards */}
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 w-full">
         {platforms.map((p) => {
           const form = forms[p.id] || { client_id: "", client_secret: "", redirect_uri: "" };
           const isConfigured = apps.some((a) => a.platform === p.id && a.is_configured);

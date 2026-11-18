@@ -119,12 +119,20 @@ export default function TenantLoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-400">
-          Admin portal?{" "}
-          <Link href="/admin/login" className="font-semibold text-indigo-600 hover:underline">
-            Go to Admin Login
-          </Link>
-        </p>
+        <div className="space-y-2 text-center text-xs text-slate-500">
+          <p>
+            Don&apos;t have a workspace?{" "}
+            <Link href="/register" className="font-semibold text-indigo-600 hover:underline">
+              Register here
+            </Link>
+          </p>
+          <p className="text-slate-400">
+            Admin portal?{" "}
+            <Link href="/admin/login" className="font-semibold text-slate-600 hover:underline">
+              Go to Admin Login
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

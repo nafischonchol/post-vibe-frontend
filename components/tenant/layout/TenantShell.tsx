@@ -242,7 +242,7 @@ export function TenantShell({ children }: { children: React.ReactNode }) {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto w-full">
+          <div className="w-full">
             {children}
           </div>
         </main>

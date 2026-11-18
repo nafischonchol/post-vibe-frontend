@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Activity,
-  Layers,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  ExternalLink,
-  RefreshCw,
-  Cpu,
-  Database,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
 import { PageHeader } from "@/components/admin/ui/page-header";
@@ -53,55 +43,6 @@ export default function MonitoringPage() {
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
-      </div>
-
-      {/* Horizon and Telescope Direct Jumpers */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="border-slate-200 shadow-xs bg-white">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Laravel Horizon Dashboard
-              </CardTitle>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
-                Redis Queue Supervisor
-              </span>
-            </div>
-            <CardDescription className="text-xs text-slate-500">
-              Real-time job throughput, runtime metrics, supervisor processes, and queue balancing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <a href="http://127.0.0.1:8000/horizon" target="_blank" rel="noopener noreferrer">
-              <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white text-xs">
-                Open Horizon Console <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-              </Button>
-            </a>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 shadow-xs bg-white">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Laravel Telescope Diagnostics
-              </CardTitle>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
-                Telemetry & Profiler
-              </span>
-            </div>
-            <CardDescription className="text-xs text-slate-500">
-              Deep dive into incoming requests, database queries, Redis caching, and exception stack traces.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <a href="http://127.0.0.1:8000/telescope" target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" className="border-slate-200 text-slate-700 text-xs">
-                Open Telescope Console <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-              </Button>
-            </a>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Pipeline Status Breakdown */}
