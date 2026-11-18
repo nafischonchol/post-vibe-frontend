@@ -46,7 +46,6 @@ export default function SourcesPage() {
   const [formData, setFormData] = useState({
     name: "",
     platform: "youtube",
-    source_identifier: "@creator_channel",
     source_url: "https://youtube.com/@creator_channel",
     scan_frequency: 60,
   });
@@ -79,12 +78,14 @@ export default function SourcesPage() {
     try {
       setIsSubmitting(true);
       setError(null);
-      await tenantApi.createSource(formData);
+
+      const identifier = getSourceIdentifier(formData.source_url);
+
+      await tenantApi.createSource({ ...formData, source_identifier: identifier });
       setShowAddModal(false);
       setFormData({
         name: "",
         platform: "youtube",
-        source_identifier: "@creator_channel",
         source_url: "https://youtube.com/@creator_channel",
         scan_frequency: 60,
       });
@@ -138,6 +139,16 @@ export default function SourcesPage() {
       setSuccessMessage("Video source deleted.");
     } catch (err: any) {
       alert(err?.message || "Failed to delete source.");
+    }
+  };
+
+  const getSourceIdentifier = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      const segments = parsed.pathname.split("/").filter(Boolean);
+      return segments.at(-1) || parsed.hostname;
+    } catch {
+      return url;
     }
   };
 
@@ -438,12 +449,15 @@ export default function SourcesPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Handle / Identifier</Label>
+                <Label className="text-xs font-semibold text-slate-700">Scan Frequency (Minutes)</Label>
                 <Input
-                  type="text"
-                  placeholder="@creator_channel"
-                  value={formData.source_identifier}
-                  onChange={(e) => setFormData({ ...formData, source_identifier: e.target.value })}
+                  type="number"
+                  min="15"
+                  max="1440"
+                  value={formData.scan_frequency}
+                  onChange={(e) =>
+                    setFormData({ ...formData, scan_frequency: parseInt(e.target.value) || 60 })
+                  }
                   required
                 />
               </div>
@@ -455,20 +469,6 @@ export default function SourcesPage() {
                   placeholder="https://youtube.com/@channel"
                   value={formData.source_url}
                   onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Scan Frequency (Minutes)</Label>
-                <Input
-                  type="number"
-                  min="15"
-                  max="1440"
-                  value={formData.scan_frequency}
-                  onChange={(e) =>
-                    setFormData({ ...formData, scan_frequency: parseInt(e.target.value) || 60 })
-                  }
                   required
                 />
               </div>

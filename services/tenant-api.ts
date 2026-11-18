@@ -78,7 +78,7 @@ export const tenantApi = {
     });
   },
 
-  createSource: async (payload: { platform: string; source_identifier: string; source_url: string; name: string; scan_frequency?: number }, token?: string) => {
+  createSource: async (payload: { platform: string; source_identifier?: string; source_url: string; name: string; scan_frequency?: number }, token?: string) => {
     return request("/tenant/sources", {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
