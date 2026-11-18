@@ -164,6 +164,7 @@ export const tenantApi = {
     platform: string;
     account_name: string;
     account_handle?: string;
+    external_account_id?: string;
     access_token?: string;
     refresh_token?: string;
   }, token?: string) => {

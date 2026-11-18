@@ -30,6 +30,7 @@ interface PlatformAccount {
   token_expires_at: string | null;
   is_expiring: boolean;
   last_validated_at: string | null;
+  external_account_id?: string | null;
 }
 
 function PlatformAccountsContent() {
@@ -55,6 +56,7 @@ function PlatformAccountsContent() {
     account_handle: "",
     access_token: "",
     refresh_token: "",
+    external_account_id: "",
   });
 
   const fetchAccounts = async () => {
@@ -100,12 +102,13 @@ function PlatformAccountsContent() {
         platform: connectForm.platform,
         account_name: connectForm.account_name,
         account_handle: connectForm.account_handle || undefined,
+        external_account_id: connectForm.external_account_id || undefined,
         ...(connectForm.access_token.trim() ? { access_token: connectForm.access_token.trim() } : {}),
         ...(connectForm.refresh_token.trim() ? { refresh_token: connectForm.refresh_token.trim() } : {}),
       };
       await tenantApi.createPlatformAccount(payload);
       setShowModal(false);
-      setConnectForm({ platform: "youtube", account_name: "", account_handle: "", access_token: "", refresh_token: "" });
+      setConnectForm({ platform: "youtube", account_name: "", account_handle: "", external_account_id: "", access_token: "", refresh_token: "" });
       setSuccessMessage(`Connected ${connectForm.account_name} successfully.`);
       await fetchAccounts();
     } catch (err: any) {
@@ -278,7 +281,7 @@ function PlatformAccountsContent() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setConnectForm({ platform: p.id, account_name: "", account_handle: "", access_token: "", refresh_token: "" });
+                      setConnectForm({ platform: p.id, account_name: "", account_handle: "", external_account_id: "", access_token: "", refresh_token: "" });
                       setShowModal(true);
                     }}
                     className="w-full text-xs h-7 border-slate-200 text-slate-500 hover:bg-slate-50"
@@ -349,10 +352,22 @@ function PlatformAccountsContent() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Account / Channel Name</Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  {connectForm.platform === "youtube"
+                    ? "Channel Name"
+                    : connectForm.platform === "tiktok"
+                      ? "TikTok Account Name"
+                      : "Facebook Page Name"}
+                </Label>
                 <Input
                   type="text"
-                  placeholder="e.g. Acme Tech Studio"
+                  placeholder={
+                    connectForm.platform === "youtube"
+                      ? "e.g. Acme Tech"
+                      : connectForm.platform === "tiktok"
+                        ? "e.g. Acme Shorts"
+                        : "e.g. Acme Technology"
+                  }
                   value={connectForm.account_name}
                   onChange={(e) => setConnectForm({ ...connectForm, account_name: e.target.value })}
                   required
@@ -360,12 +375,29 @@ function PlatformAccountsContent() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Account Handle</Label>
+                <Label className="text-xs font-semibold text-slate-700">
+                  {connectForm.platform === "youtube"
+                    ? "Channel Handle"
+                    : connectForm.platform === "tiktok"
+                      ? "TikTok Username"
+                      : "Facebook Page ID"}
+                </Label>
                 <Input
                   type="text"
-                  placeholder="@acmetech"
-                  value={connectForm.account_handle}
-                  onChange={(e) => setConnectForm({ ...connectForm, account_handle: e.target.value })}
+                  placeholder={
+                    connectForm.platform === "youtube"
+                      ? "@acmetech"
+                      : connectForm.platform === "tiktok"
+                        ? "@acmetech"
+                        : "123456789012345"
+                  }
+                  value={connectForm.platform === "facebook" ? connectForm.external_account_id : connectForm.account_handle}
+                  onChange={(e) =>
+                    connectForm.platform === "facebook"
+                      ? setConnectForm({ ...connectForm, external_account_id: e.target.value })
+                      : setConnectForm({ ...connectForm, account_handle: e.target.value })
+                  }
+                  required={connectForm.platform === "facebook"}
                 />
               </div>
 
