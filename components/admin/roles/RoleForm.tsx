@@ -9,7 +9,7 @@ import { Button } from "@/components/admin/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/card";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
-import { Select } from "@/components/admin/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/admin/ui/textarea";
 import { createRoleAction, updateRoleAction } from "@/lib/api/role-actions";
 
@@ -120,16 +120,17 @@ export function RoleForm({
 
           <div className="space-y-2">
             <Label htmlFor="is_active">Status</Label>
-            <Select
-              id="is_active"
+            <SearchableSelect
+              options={[
+                { value: "1", label: "Active" },
+                { value: "0", label: "Inactive" },
+              ]}
               value={form.is_active}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, is_active: event.target.value as RoleFormValues["is_active"] }))
+              onChange={(val) =>
+                setForm((prev) => ({ ...prev, is_active: val as RoleFormValues["is_active"] }))
               }
-            >
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </Select>
+              placeholder="Select Status"
+            />
           </div>
 
           <div className="space-y-2">

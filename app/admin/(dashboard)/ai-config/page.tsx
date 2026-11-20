@@ -16,6 +16,7 @@ import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
 import { PageHeader } from "@/components/admin/ui/page-header";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { adminApi } from "@/services/admin-api";
 
 export default function AiConfigPage() {
@@ -146,14 +147,15 @@ export default function AiConfigPage() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-700">AI Provider</Label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: "openrouter", label: "OpenRouter (Recommended - Aggregated Multi-Model)" },
+                  { value: "gemini", label: "Google Gemini Direct API" },
+                ]}
                 value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-              >
-                <option value="openrouter">OpenRouter (Recommended - Aggregated Multi-Model)</option>
-                <option value="gemini">Google Gemini Direct API</option>
-              </select>
+                onChange={(val) => setProvider(val)}
+                placeholder="Select AI Provider"
+              />
             </div>
 
             <div className="space-y-1.5">

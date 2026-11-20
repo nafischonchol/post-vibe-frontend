@@ -19,6 +19,7 @@ import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
 import { PageHeader } from "@/components/admin/ui/page-header";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { adminApi } from "@/services/admin-api";
 
 interface PlanItem {
@@ -325,20 +326,24 @@ export default function TenantsPage() {
           </Button>
         </form>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-        >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending Approval</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-          <option value="rejected">Rejected</option>
-        </select>
+        <div className="w-48">
+          <SearchableSelect
+            options={[
+              { value: "", label: "All Statuses" },
+              { value: "pending", label: "Pending Approval" },
+              { value: "active", label: "Active" },
+              { value: "suspended", label: "Suspended" },
+              { value: "rejected", label: "Rejected" },
+            ]}
+            value={statusFilter}
+            onChange={(val) => {
+              setStatusFilter(val);
+              setPage(1);
+            }}
+            placeholder="Filter status..."
+            size="sm"
+          />
+        </div>
       </div>
 
       {/* Tenants Table */}
@@ -523,16 +528,17 @@ export default function TenantsPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Timezone</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "Asia/Dhaka", label: "Asia/Dhaka (UTC+6)" },
+                    { value: "UTC", label: "UTC" },
+                    { value: "America/New_York", label: "America/New_York (EST)" },
+                    { value: "Europe/London", label: "Europe/London (GMT)" },
+                  ]}
                   value={createForm.timezone}
-                  onChange={(e) => setCreateForm({ ...createForm, timezone: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                >
-                  <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">America/New_York (EST)</option>
-                  <option value="Europe/London">Europe/London (GMT)</option>
-                </select>
+                  onChange={(val) => setCreateForm({ ...createForm, timezone: val })}
+                  placeholder="Select Timezone"
+                />
               </div>
 
               <div className="border-t border-slate-100 pt-3">
@@ -700,52 +706,54 @@ export default function TenantsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700">Timezone</Label>
-                  <select
+                  <SearchableSelect
+                    options={[
+                      { value: "Asia/Dhaka", label: "Asia/Dhaka (UTC+6)" },
+                      { value: "UTC", label: "UTC" },
+                      { value: "America/New_York", label: "America/New_York (EST)" },
+                      { value: "Europe/London", label: "Europe/London (GMT)" },
+                      { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
+                      { value: "Asia/Singapore", label: "Asia/Singapore (SGT)" },
+                      { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
+                      { value: "Europe/Berlin", label: "Europe/Berlin (CET)" },
+                      { value: "Australia/Sydney", label: "Australia/Sydney (AEST)" },
+                    ]}
                     value={editForm.timezone}
-                    onChange={(e) => setEditForm({ ...editForm, timezone: e.target.value })}
-                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                  >
-                    <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">America/New_York (EST)</option>
-                    <option value="Europe/London">Europe/London (GMT)</option>
-                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                    <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
-                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                    <option value="Europe/Berlin">Europe/Berlin (CET)</option>
-                    <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
-                  </select>
+                    onChange={(val) => setEditForm({ ...editForm, timezone: val })}
+                    placeholder="Select Timezone"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700">Workspace Status</Label>
-                  <select
+                  <SearchableSelect
+                    options={[
+                      { value: "active", label: "Active" },
+                      { value: "pending", label: "Pending Approval" },
+                      { value: "suspended", label: "Suspended" },
+                      { value: "rejected", label: "Rejected" },
+                    ]}
                     value={editForm.status}
-                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
-                    className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium capitalize"
-                  >
-                    <option value="active">Active</option>
-                    <option value="pending">Pending Approval</option>
-                    <option value="suspended">Suspended</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
+                    onChange={(val) => setEditForm({ ...editForm, status: val as any })}
+                    placeholder="Select Status"
+                  />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Subscription Plan</Label>
-                <select
-                  value={editForm.plan_id}
-                  onChange={(e) => setEditForm({ ...editForm, plan_id: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                >
-                  <option value="">Keep Existing / None</option>
-                  {plans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} {p.global_daily_quota ? `(${p.global_daily_quota} videos/day)` : ""}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={[
+                    { value: "", label: "Keep Existing / None" },
+                    ...plans.map((p) => ({
+                      value: String(p.id),
+                      label: `${p.name}${p.global_daily_quota ? ` (${p.global_daily_quota} videos/day)` : ""}`,
+                    })),
+                  ]}
+                  value={String(editForm.plan_id || "")}
+                  onChange={(val) => setEditForm({ ...editForm, plan_id: val })}
+                  placeholder="Select Subscription Plan"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
