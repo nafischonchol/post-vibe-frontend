@@ -28,7 +28,9 @@ interface BatchItem {
     platform: string;
     upload_status: string;
     platform_post_url: string | null;
-    error_message: string | null;
+    error_message?: string | null;
+    last_error?: string | null;
+    attempt_count?: number;
   }>;
 }
 
@@ -125,32 +127,48 @@ export default function HistoryPage() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="flex flex-col gap-1 text-xs">
-                          {batch.schedules?.map((s) => (
-                            <div key={s.id} className="flex items-center gap-2">
-                              <span className="font-medium text-slate-700 capitalize w-16">
-                                {s.platform}:
-                              </span>
-                              {s.platform_post_url ? (
-                                <a
-                                  href={s.platform_post_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-indigo-600 hover:underline flex items-center gap-1 text-[11px]"
-                                >
-                                  View Published Reel <ExternalLink className="h-3 w-3" />
-                                </a>
-                              ) : s.error_message ? (
-                                <span className="text-rose-600 text-[11px] truncate max-w-xs">
-                                  {s.error_message}
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 text-[11px]">
-                                  Status: {s.upload_status}
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                        <div className="flex flex-col gap-2 text-xs">
+                          {batch.schedules?.map((s) => {
+                            const errorMessage = s.error_message || s.last_error;
+                            const isFailed = s.upload_status === "failed" || !!errorMessage;
+
+                            return (
+                              <div key={s.id} className="flex flex-col gap-1 items-start">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-slate-700 capitalize">
+                                    {s.platform}:
+                                  </span>
+
+                                  {s.platform_post_url ? (
+                                    <a
+                                      href={s.platform_post_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 text-[11px] font-medium"
+                                    >
+                                      View Published Reel <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  ) : isFailed ? (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                                      <AlertTriangle className="h-2.5 w-2.5 text-rose-500" />
+                                      Failed
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200 capitalize">
+                                      {s.upload_status}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isFailed && errorMessage && (
+                                  <div className="flex items-start gap-1.5 text-rose-700 bg-rose-50/90 border border-rose-200/80 rounded-md px-2 py-1 text-[11px] leading-relaxed max-w-md break-words">
+                                    <span className="font-semibold text-rose-800 shrink-0">Reason:</span>
+                                    <span>{errorMessage}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </td>
                     </tr>

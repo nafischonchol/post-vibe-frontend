@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { tenantApi } from "@/services/tenant-api";
 
 interface VideoSource {
@@ -528,16 +529,18 @@ export default function SourcesPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Platform</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "youtube", label: "YouTube Shorts / Channel", badge: "YT" },
+                    { value: "tiktok", label: "TikTok Feed / Account", badge: "TT" },
+                    { value: "instagram", label: "Instagram Reels", badge: "IG" },
+                    { value: "facebook", label: "Facebook Page / Reels", badge: "FB" },
+                  ]}
                   value={formData.platform}
-                  onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="youtube">YouTube</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, platform: val })}
+                  placeholder="Select Platform"
+                  searchPlaceholder="Search platform..."
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -620,16 +623,18 @@ export default function SourcesPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Platform</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "youtube", label: "YouTube Shorts / Channel", badge: "YT" },
+                    { value: "tiktok", label: "TikTok Feed / Account", badge: "TT" },
+                    { value: "instagram", label: "Instagram Reels", badge: "IG" },
+                    { value: "facebook", label: "Facebook Page / Reels", badge: "FB" },
+                  ]}
                   value={editFormData.platform}
-                  onChange={(e) => setEditFormData({ ...editFormData, platform: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="youtube">YouTube</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="facebook">Facebook</option>
-                </select>
+                  onChange={(val) => setEditFormData({ ...editFormData, platform: val })}
+                  placeholder="Select Platform"
+                  searchPlaceholder="Search platform..."
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -659,19 +664,21 @@ export default function SourcesPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Status</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "active", label: "Active", badge: "LIVE" },
+                    { value: "paused", label: "Paused", badge: "PAUSED" },
+                  ]}
                   value={editFormData.status}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setEditFormData({
                       ...editFormData,
-                      status: e.target.value as "active" | "paused",
+                      status: val as "active" | "paused",
                     })
                   }
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="active">Active</option>
-                  <option value="paused">Paused</option>
-                </select>
+                  placeholder="Select Status"
+                  searchPlaceholder="Search status..."
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { tenantApi } from "@/services/tenant-api";
 
 interface PlatformAccount {
@@ -340,15 +341,17 @@ function PlatformAccountsContent() {
             <form onSubmit={handleManualConnect} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Platform</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "youtube", label: "YouTube Shorts / Channel", badge: "YT" },
+                    { value: "tiktok", label: "TikTok Business / Creator", badge: "TT" },
+                    { value: "facebook", label: "Facebook Page / Reels", badge: "FB" },
+                  ]}
                   value={connectForm.platform}
-                  onChange={(e) => setConnectForm({ ...connectForm, platform: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="youtube">YouTube</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="facebook">Facebook Reels</option>
-                </select>
+                  onChange={(val) => setConnectForm({ ...connectForm, platform: val })}
+                  placeholder="Select Platform"
+                  searchPlaceholder="Search platform..."
+                />
               </div>
 
               <div className="space-y-1.5">

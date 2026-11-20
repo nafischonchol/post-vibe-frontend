@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 export default function TenantSettingsPage() {
   const [saving, setSaving] = useState(false);
@@ -83,16 +84,21 @@ export default function TenantSettingsPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Quota Timezone</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "Asia/Dhaka", label: "Asia/Dhaka", subLabel: "Bangladesh Standard Time (UTC+6)", badge: "UTC+6" },
+                    { value: "UTC", label: "UTC", subLabel: "Coordinated Universal Time", badge: "UTC+0" },
+                    { value: "America/New_York", label: "America/New_York", subLabel: "Eastern Time (EST)", badge: "UTC-5" },
+                    { value: "America/Los_Angeles", label: "America/Los_Angeles", subLabel: "Pacific Time (PST)", badge: "UTC-8" },
+                    { value: "Europe/London", label: "Europe/London", subLabel: "Greenwich Mean Time (GMT)", badge: "UTC+0" },
+                    { value: "Asia/Dubai", label: "Asia/Dubai", subLabel: "Gulf Standard Time (GST)", badge: "UTC+4" },
+                    { value: "Asia/Singapore", label: "Asia/Singapore", subLabel: "Singapore Standard Time (SGT)", badge: "UTC+8" },
+                  ]}
                   value={settings.timezone}
-                  onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                >
-                  <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
-                  <option value="UTC">UTC (UTC+0)</option>
-                  <option value="America/New_York">America/New_York (EST)</option>
-                  <option value="Europe/London">Europe/London (GMT)</option>
-                </select>
+                  onChange={(val) => setSettings({ ...settings, timezone: val })}
+                  placeholder="Select Timezone"
+                  searchPlaceholder="Search timezone or country..."
+                />
               </div>
             </div>
           </CardContent>

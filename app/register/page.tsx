@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/admin/ui/input";
 import { Button } from "@/components/admin/ui/button";
 import { Label } from "@/components/admin/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { tenantApi } from "@/services/tenant-api";
 
 export default function TenantRegisterPage() {
@@ -152,18 +153,19 @@ export default function TenantRegisterPage() {
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">Timezone</Label>
-                    <select
+                    <SearchableSelect
+                      options={[
+                        { value: "Asia/Dhaka", label: "Asia/Dhaka (UTC+6)" },
+                        { value: "UTC", label: "UTC (UTC+0)" },
+                        { value: "America/New_York", label: "America/New_York (EST)" },
+                        { value: "Europe/London", label: "Europe/London (GMT)" },
+                        { value: "Asia/Dubai", label: "Asia/Dubai (GST)" },
+                        { value: "Asia/Singapore", label: "Asia/Singapore (SGT)" },
+                      ]}
                       value={form.timezone}
-                      onChange={(e) => setForm({ ...form, timezone: e.target.value })}
-                      className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                    >
-                      <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
-                      <option value="UTC">UTC (UTC+0)</option>
-                      <option value="America/New_York">America/New_York (EST)</option>
-                      <option value="Europe/London">Europe/London (GMT)</option>
-                      <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-                      <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
-                    </select>
+                      onChange={(val) => setForm({ ...form, timezone: val })}
+                      placeholder="Select Timezone"
+                    />
                   </div>
                 </div>
 

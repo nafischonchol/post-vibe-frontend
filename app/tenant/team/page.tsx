@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Label } from "@/components/admin/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface TeamMember {
   id: number;
@@ -185,15 +186,17 @@ export default function TeamPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700">Role & Permissions</Label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "admin", label: "Admin", subLabel: "Manage sources, accounts & settings", badge: "ADMIN" },
+                    { value: "editor", label: "Editor", subLabel: "Create & approve batches, edit metadata", badge: "EDITOR" },
+                    { value: "viewer", label: "Viewer", subLabel: "Read-only analytics & history", badge: "VIEWER" },
+                  ]}
                   value={inviteForm.role}
-                  onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as any })}
-                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                >
-                  <option value="admin">Admin (Manage sources, accounts & settings)</option>
-                  <option value="editor">Editor (Create & approve batches, edit metadata)</option>
-                  <option value="viewer">Viewer (Read-only analytics & history)</option>
-                </select>
+                  onChange={(val) => setInviteForm({ ...inviteForm, role: val as any })}
+                  placeholder="Select Role"
+                  searchPlaceholder="Search role..."
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">

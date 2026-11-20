@@ -1,5 +1,6 @@
+import { FileText, CheckCircle, AlertTriangle, ShieldCheck, Scale, Ban } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft, FileText, CheckCircle, AlertTriangle, ShieldCheck, Scale, Ban } from "lucide-react";
+import { PublicNavbar } from "@/components/ui/public-navbar";
 
 export const metadata = {
   title: "Terms of Service | Post-Vibe",
@@ -9,19 +10,8 @@ export const metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-sm font-medium">Back to Home</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white font-bold text-xs">
-            PV
-          </span>
-          <span className="text-sm font-semibold tracking-tight text-white">Post-Vibe</span>
-        </div>
-      </header>
+      {/* Standard Shared Navbar */}
+      <PublicNavbar />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">

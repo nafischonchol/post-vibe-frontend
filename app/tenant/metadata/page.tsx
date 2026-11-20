@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,6 +13,10 @@ import {
   Send,
   Video,
   FileCode,
+  Search,
+  ChevronDown,
+  Check,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -70,9 +74,35 @@ function MetadataEditor() {
   const [ttForm, setTtForm] = useState({ caption: "", hashtags: "" });
   const [fbForm, setFbForm] = useState({ caption: "", hashtags: "" });
 
-  // Initial load: videos list if none selected
+  // Searchable Target Video state
+  const [videoDropdownOpen, setVideoDropdownOpen] = useState(false);
+  const [videoSearchTerm, setVideoSearchTerm] = useState("");
+  const videoDropdownRef = useRef<HTMLDivElement>(null);
+  const videoSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // Close dropdown on click outside
   useEffect(() => {
-    tenantApi.getVideos({ per_page: "20" }).then((res) => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (videoDropdownRef.current && !videoDropdownRef.current.contains(event.target as Node)) {
+        setVideoDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (videoDropdownOpen) {
+      setTimeout(() => {
+        videoSearchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [videoDropdownOpen]);
+
+  // Initial load: videos list
+  useEffect(() => {
+    tenantApi.getVideos({ per_page: "50" }).then((res) => {
       const list = res.resources || [];
       setVideos(list);
       if (!selectedVideoId && list.length > 0) {
@@ -80,6 +110,25 @@ function MetadataEditor() {
       }
     }).catch(() => {});
   }, []);
+
+  // Debounced search when user types in search input
+  useEffect(() => {
+    if (!videoSearchTerm.trim()) return;
+    const timer = setTimeout(() => {
+      tenantApi.getVideos({ search: videoSearchTerm.trim(), per_page: "50" })
+        .then((res) => {
+          const fetched = res.resources || [];
+          setVideos((prev) => {
+            const map = new Map<number, VideoDetail>();
+            prev.forEach((v) => map.set(v.id, v));
+            fetched.forEach((v: VideoDetail) => map.set(v.id, v));
+            return Array.from(map.values());
+          });
+        })
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [videoSearchTerm]);
 
   // When selectedVideoId changes, load video and metadata
   useEffect(() => {
@@ -219,6 +268,18 @@ function MetadataEditor() {
     }
   };
 
+  const currentVideo = video || videos.find((v) => v.id === selectedVideoId);
+
+  const filteredVideos = videos.filter((v) => {
+    if (!videoSearchTerm.trim()) return true;
+    const term = videoSearchTerm.toLowerCase().replace(/^#/, "");
+    const idMatch = v.id.toString().includes(term);
+    const titleMatch = v.title?.toLowerCase().includes(term);
+    const captionMatch = v.original_caption?.toLowerCase().includes(term);
+    const platformMatch = v.source_platform?.toLowerCase().includes(term);
+    return idMatch || titleMatch || captionMatch || platformMatch;
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -254,25 +315,117 @@ function MetadataEditor() {
         )}
       </div>
 
-      {/* Video Selector Dropdown if multiple videos available */}
+      {/* Searchable Target Video Selector */}
       <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 text-xs">
-        <span className="font-semibold text-slate-700">Target Video:</span>
-        <select
-          value={selectedVideoId || ""}
-          onChange={(e) => {
-            const id = parseInt(e.target.value);
-            setSelectedVideoId(id);
-            router.push(`/tenant/metadata?video_id=${id}`);
-          }}
-          className="h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 max-w-md"
-        >
-          {videos.map((v) => (
-            <option key={v.id} value={v.id}>
-              #{v.id} - {v.title || v.original_caption?.slice(0, 40) || "Video #" + v.id} ({v.source_platform})
-            </option>
-          ))}
-        </select>
-        <Link href="/tenant/videos" className="text-indigo-600 hover:underline flex items-center gap-1">
+        <span className="font-semibold text-slate-700 shrink-0">Target Video:</span>
+
+        <div className="relative flex-1 max-w-xl" ref={videoDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setVideoDropdownOpen((prev) => !prev)}
+            className="w-full h-8 rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-between gap-2 text-left hover:border-slate-300 transition-colors shadow-2xs"
+          >
+            <div className="flex items-center gap-1.5 truncate">
+              {currentVideo ? (
+                <>
+                  <span className="font-mono text-indigo-600 font-semibold bg-indigo-50 px-1 py-0.2 rounded text-[10px] shrink-0 border border-indigo-100">
+                    #{currentVideo.id}
+                  </span>
+                  <span className="truncate">
+                    {currentVideo.title || currentVideo.original_caption || `Video #${currentVideo.id}`}
+                  </span>
+                  <span className="text-[10px] uppercase font-mono text-slate-400 bg-slate-100 px-1 py-0.2 rounded border border-slate-200 shrink-0">
+                    {currentVideo.source_platform}
+                  </span>
+                </>
+              ) : (
+                <span className="text-slate-400">Select target video...</span>
+              )}
+            </div>
+            <ChevronDown className={`h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${videoDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {/* Searchable Dropdown Popup */}
+          {videoDropdownOpen && (
+            <div className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[340px] max-w-2xl rounded-xl border border-slate-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+              {/* Search Input Box */}
+              <div className="p-2 border-b border-slate-100 bg-slate-50/60">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    ref={videoSearchInputRef}
+                    type="text"
+                    placeholder="Search by ID, caption, title, or platform..."
+                    value={videoSearchTerm}
+                    onChange={(e) => setVideoSearchTerm(e.target.value)}
+                    className="w-full h-8 pl-8 pr-7 rounded-md border border-slate-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  />
+                  {videoSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoSearchTerm("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Videos Scrollable List */}
+              <div className="max-h-64 overflow-y-auto divide-y divide-slate-50 p-1">
+                {filteredVideos.length === 0 ? (
+                  <div className="py-6 text-center text-xs text-slate-400">
+                    No videos found matching &ldquo;{videoSearchTerm}&rdquo;
+                  </div>
+                ) : (
+                  filteredVideos.map((v) => {
+                    const isSelected = v.id === selectedVideoId;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVideoId(v.id);
+                          setVideoDropdownOpen(false);
+                          setVideoSearchTerm("");
+                          router.push(`/tenant/metadata?video_id=${v.id}`);
+                        }}
+                        className={`w-full p-2 rounded-lg text-left flex items-start justify-between gap-2.5 text-xs transition-colors ${
+                          isSelected
+                            ? "bg-indigo-50/80 text-indigo-950 font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        <div className="space-y-0.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10px] text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-100 font-bold shrink-0">
+                              #{v.id}
+                            </span>
+                            <span className="text-[9px] uppercase font-mono text-slate-500 bg-slate-100 px-1 py-0.2 rounded border border-slate-200 shrink-0">
+                              {v.source_platform}
+                            </span>
+                            <span className="font-medium text-slate-900 truncate">
+                              {v.title || `Video #${v.id}`}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 line-clamp-1 font-normal">
+                            {v.original_caption || "(No caption provided)"}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <Check className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Link href="/tenant/videos" className="text-indigo-600 hover:underline flex items-center gap-1 shrink-0 ml-auto font-medium">
           Catalog <ExternalLink className="h-3 w-3" />
         </Link>
       </div>
