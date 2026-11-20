@@ -24,8 +24,10 @@ import { tenantApi } from "@/services/tenant-api";
 interface PublishingBatchItem {
   id: number;
   batch_status: string;
-  trigger_type: string;
-  scheduled_at: string;
+  publishing_mode?: string;
+  trigger_type?: string;
+  intended_publish_at?: string;
+  scheduled_at?: string;
   created_at: string;
   video?: {
     id: number;
@@ -36,8 +38,10 @@ interface PublishingBatchItem {
     id: number;
     platform: string;
     upload_status: string;
-    platform_post_url: string | null;
-    error_message: string | null;
+    platform_post_url?: string | null;
+    external_post_url?: string | null;
+    external_post_id?: string | null;
+    error_message?: string | null;
     platform_account?: {
       account_name: string;
       account_handle: string;
@@ -269,12 +273,14 @@ function PublishingManager() {
 
                       <td className="py-3 px-4">
                         <span className="text-[11px] font-mono capitalize text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                          {batch.trigger_type}
+                          {batch.publishing_mode || batch.trigger_type || "manual"}
                         </span>
                       </td>
 
                       <td className="py-3 px-4 text-xs text-slate-600">
-                        {batch.scheduled_at ? new Date(batch.scheduled_at).toLocaleString() : "Immediate"}
+                        {batch.intended_publish_at || batch.scheduled_at
+                          ? new Date(batch.intended_publish_at || batch.scheduled_at!).toLocaleString()
+                          : "Immediate"}
                       </td>
 
                       <td className="py-3 px-4">
@@ -293,7 +299,7 @@ function PublishingManager() {
                             <span
                               key={s.id}
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border capitalize ${
-                                s.upload_status === "completed"
+                                ["completed", "published"].includes(s.upload_status)
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                   : s.upload_status === "failed"
                                   ? "bg-rose-50 text-rose-700 border-rose-200"
@@ -301,13 +307,24 @@ function PublishingManager() {
                               }`}
                             >
                               <span>{s.platform}</span>: <span>{s.upload_status}</span>
+                              {s.platform_post_url && (
+                                <a
+                                  href={s.platform_post_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="ml-1 text-emerald-700 hover:text-emerald-900 inline-flex items-center"
+                                  title="View on platform"
+                                >
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              )}
                             </span>
                           ))}
                         </div>
                       </td>
 
                       <td className="py-3 px-4 text-right">
-                        {["scheduled", "pending"].includes(batch.batch_status) && (
+                        {["scheduled", "pending"].includes(batch.batch_status) ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -318,6 +335,26 @@ function PublishingManager() {
                             <Ban className="h-3.5 w-3.5 mr-1" />
                             Cancel
                           </Button>
+                        ) : batch.schedules?.some((s) => s.platform_post_url) ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            {batch.schedules
+                              .filter((s) => s.platform_post_url)
+                              .map((s) => (
+                                <a
+                                  key={s.id}
+                                  href={s.platform_post_url!}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md bg-slate-900 hover:bg-slate-800 text-white transition-colors"
+                                  title={`View published post on ${s.platform}`}
+                                >
+                                  <span>View Reel</span>
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-300 font-mono">—</span>
                         )}
                       </td>
                     </tr>

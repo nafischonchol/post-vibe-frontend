@@ -35,9 +35,9 @@ export default function PlatformConfigPage() {
 
   // Forms per platform
   const [forms, setForms] = useState<Record<string, { client_id: string; client_secret: string; redirect_uri: string }>>({
-    youtube: { client_id: "", client_secret: "", redirect_uri: "http://localhost:3000/api/auth/callback/youtube" },
-    tiktok: { client_id: "", client_secret: "", redirect_uri: "http://localhost:3000/api/auth/callback/tiktok" },
-    facebook: { client_id: "", client_secret: "", redirect_uri: "http://localhost:3000/api/auth/callback/facebook" },
+    youtube: { client_id: "", client_secret: "", redirect_uri: "https://postvibe.mohima.skin/api/auth/callback/youtube" },
+    tiktok: { client_id: "", client_secret: "", redirect_uri: "https://postvibe.mohima.skin/api/auth/callback/tiktok" },
+    facebook: { client_id: "1014592994306470", client_secret: "", redirect_uri: "https://postvibe.mohima.skin/api/auth/callback/facebook" },
   });
 
   const fetchApps = async () => {
