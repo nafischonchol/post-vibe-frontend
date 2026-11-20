@@ -15,6 +15,11 @@ import {
   CheckCircle2,
   XCircle,
   RotateCw,
+  Trash2,
+  Loader2,
+  Play,
+  Download,
+  DownloadCloud,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -27,10 +32,17 @@ interface VideoItem {
   original_caption: string;
   original_hashtags: string[];
   source_platform: string;
-  source_url: string;
-  duration_seconds: number;
+  source_post_url?: string;
+  source_url?: string;
+  duration?: number;
+  duration_seconds?: number;
   processing_status: string;
   thumbnail_url: string | null;
+  temporary_storage_path?: string | null;
+  is_downloaded?: boolean;
+  playback_url?: string | null;
+  file_size_bytes?: number | null;
+  file_size_formatted?: string | null;
   created_at: string;
   source?: {
     name: string;
@@ -46,6 +58,12 @@ export default function VideosPage() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  // Playback & Download State
+  const [playingVideo, setPlayingVideo] = useState<VideoItem | null>(null);
+  const [downloadingVideoId, setDownloadingVideoId] = useState<number | null>(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -95,7 +113,50 @@ export default function VideosPage() {
     }
   };
 
-  const formatDuration = (seconds: number) => {
+  const handleDeleteVideo = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this video? This action will permanently remove the video and its generated metadata.")) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+      setError(null);
+      await tenantApi.deleteVideo(id);
+      setVideos((prev) => prev.filter((v) => v.id !== id));
+      setMeta((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+      setSuccessMessage("Video deleted successfully.");
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err: any) {
+      setError(err?.message || "Failed to delete video.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleDownloadNow = async (video: VideoItem) => {
+    try {
+      setDownloadingVideoId(video.id);
+      setError(null);
+      const res = await tenantApi.downloadVideoNow(video.id);
+      setSuccessMessage("Video downloaded successfully!");
+      if (res.resources) {
+        setVideos((prev) =>
+          prev.map((v) => (v.id === video.id ? { ...v, ...res.resources } : v))
+        );
+        if (playingVideo && playingVideo.id === video.id) {
+          setPlayingVideo({ ...playingVideo, ...res.resources });
+        }
+      } else {
+        await fetchVideos();
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to download video media.");
+    } finally {
+      setDownloadingVideoId(null);
+    }
+  };
+
+  const formatDuration = (seconds?: number | null) => {
     if (!seconds) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -127,7 +188,7 @@ export default function VideosPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Video Ingestion</h1>
           <p className="text-sm text-slate-500">
-            Collected videos, processing pipelines, and syndication readiness.
+            Collected videos, processing pipelines, and publishing readiness.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -161,6 +222,18 @@ export default function VideosPage() {
         </div>
       )}
 
+      {successMessage && (
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            <span>{successMessage}</span>
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => setSuccessMessage(null)} className="text-emerald-700 hover:bg-emerald-100">
+            Dismiss
+          </Button>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
@@ -189,7 +262,7 @@ export default function VideosPage() {
             className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">All Statuses</option>
-            <option value="ready">Ready to Syndicate</option>
+            <option value="ready">Ready to Publish</option>
             <option value="published">Published</option>
             <option value="generating_metadata">Generating Metadata</option>
             <option value="downloading">Downloading</option>
@@ -327,7 +400,7 @@ export default function VideosPage() {
                                 className="h-7 px-2 text-xs bg-slate-900 hover:bg-slate-800 text-white"
                               >
                                 <Send className="h-3 w-3 mr-1" />
-                                Syndicate
+                                Publish
                               </Button>
                             </Link>
 
@@ -339,6 +412,21 @@ export default function VideosPage() {
                               title="Reprocess Video & AI"
                             >
                               <RotateCw className="h-3.5 w-3.5" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteVideo(v.id)}
+                              disabled={deletingId === v.id}
+                              className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                              title="Delete Video"
+                            >
+                              {deletingId === v.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-rose-500" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
                             </Button>
                           </div>
                         </td>

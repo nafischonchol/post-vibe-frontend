@@ -58,7 +58,7 @@ export default function HistoryPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Publishing History</h1>
           <p className="text-sm text-slate-500">
-            Historical audit log of syndication runs, platform confirmation URLs, and execution metrics.
+            Historical audit log of publishing runs, platform confirmation URLs, and execution metrics.
           </p>
         </div>
         <Button
@@ -79,7 +79,7 @@ export default function HistoryPage() {
             <div className="py-12 text-center text-xs text-slate-400">Loading history...</div>
           ) : batches.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400">
-              No historical syndication records found.
+              No historical publishing records found.
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
           Analytics & Performance
         </h1>
         <p className="text-sm text-slate-500">
-          Telemetry on multi-channel syndication reliability, turnaround speed, and platform volume.
+          Telemetry on multi-channel publishing reliability, turnaround speed, and platform volume.
         </p>
       </div>
 
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
             <div className="text-2xl font-bold text-slate-900">
               {data?.publishing?.published_batches ?? 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Successfully syndicated</p>
+            <p className="text-xs text-slate-500 mt-1">Successfully published</p>
           </CardContent>
         </Card>
 
@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
               Platform Distribution
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
-              Share of short-form syndication across platforms
+              Share of short-form publishing across platforms
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

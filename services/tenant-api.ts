@@ -101,6 +101,13 @@ export const tenantApi = {
     });
   },
 
+  scanSource: async (id: number, token?: string) => {
+    return request(`/tenant/sources/${id}/scan`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
   scrapeVideo: async (url: string, sourceId?: number, token?: string) => {
     return request("/tenant/sources/scrape-video", {
       method: "POST",
@@ -128,6 +135,31 @@ export const tenantApi = {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify({ media_url: mediaUrl }),
+    });
+  },
+
+  downloadVideoNow: async (id: number, mediaUrl?: string, token?: string) => {
+    return request(`/tenant/videos/${id}/download-now`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify({ media_url: mediaUrl }),
+    });
+  },
+
+  getVideoStreamUrl: (id: number) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("tenant_token") : null;
+    return `${API_BASE_URL}/tenant/videos/${id}/stream${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+  },
+
+  getVideoDownloadUrl: (id: number) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("tenant_token") : null;
+    return `${API_BASE_URL}/tenant/videos/${id}/stream?download=1${token ? `&token=${encodeURIComponent(token)}` : ""}`;
+  },
+
+  deleteVideo: async (id: number, token?: string) => {
+    return request(`/tenant/videos/${id}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   },
 

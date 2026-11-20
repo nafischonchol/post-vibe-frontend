@@ -14,6 +14,8 @@ import {
   Sparkles,
   CheckCircle2,
   DownloadCloud,
+  Pencil,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -49,6 +51,21 @@ export default function SourcesPage() {
     source_url: "https://youtube.com/@creator_channel",
     scan_frequency: 60,
   });
+
+  // Edit source form modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSource, setEditingSource] = useState<VideoSource | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    platform: "youtube",
+    source_url: "",
+    scan_frequency: 60,
+    status: "active" as "active" | "paused",
+  });
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Instant Scraper state
+  const [scanningSourceId, setScanningSourceId] = useState<number | null>(null);
 
   // Direct Video Scraper Modal State
   const [showScrapeModal, setShowScrapeModal] = useState(false);
@@ -139,6 +156,58 @@ export default function SourcesPage() {
       setSuccessMessage("Video source deleted.");
     } catch (err: any) {
       alert(err?.message || "Failed to delete source.");
+    }
+  };
+
+  const handleOpenEdit = (source: VideoSource) => {
+    setEditingSource(source);
+    setEditFormData({
+      name: source.name,
+      platform: source.platform,
+      source_url: source.source_url,
+      scan_frequency: source.scan_frequency,
+      status: source.status,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateSource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSource) return;
+
+    try {
+      setIsEditing(true);
+      setError(null);
+
+      const identifier = getSourceIdentifier(editFormData.source_url);
+
+      await tenantApi.updateSource(editingSource.id, {
+        ...editFormData,
+        source_identifier: identifier,
+      });
+
+      setShowEditModal(false);
+      setEditingSource(null);
+      setSuccessMessage("Video source updated successfully.");
+      await fetchSources();
+    } catch (err: any) {
+      setError(err?.message || "Failed to update video source.");
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleInstantScrape = async (source: VideoSource) => {
+    try {
+      setScanningSourceId(source.id);
+      setError(null);
+      const res = await tenantApi.scanSource(source.id);
+      setSuccessMessage(res?.message || `Instant scrape completed for ${source.name}.`);
+      await fetchSources();
+    } catch (err: any) {
+      setError(err?.message || `Failed to scrape source ${source.name}.`);
+    } finally {
+      setScanningSourceId(null);
     }
   };
 
@@ -301,6 +370,20 @@ export default function SourcesPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleInstantScrape(source)}
+                            disabled={scanningSourceId === source.id}
+                            className="h-7 w-7 p-0 text-slate-500 hover:text-amber-600 disabled:opacity-50"
+                            title="Instant Video Scrape"
+                          >
+                            {scanningSourceId === source.id ? (
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                            ) : (
+                              <Zap className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleToggleStatus(source)}
                             className="h-7 w-7 p-0 text-slate-500 hover:text-slate-800"
                             title={source.status === "active" ? "Pause" : "Resume"}
@@ -310,6 +393,15 @@ export default function SourcesPage() {
                             ) : (
                               <Play className="h-3.5 w-3.5 text-emerald-600" />
                             )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEdit(source)}
+                            className="h-7 w-7 p-0 text-slate-500 hover:text-indigo-600"
+                            title="Edit Source"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -490,6 +582,118 @@ export default function SourcesPage() {
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
                 >
                   {isSubmitting ? "Adding..." : "Add Source Feed"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Feed Modal */}
+      {showEditModal && editingSource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-semibold text-slate-900">Edit Video Feed</h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingSource(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSource} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Source Display Name</Label>
+                <Input
+                  type="text"
+                  placeholder="e.g. My Productivity Shorts"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Platform</Label>
+                <select
+                  value={editFormData.platform}
+                  onChange={(e) => setEditFormData({ ...editFormData, platform: e.target.value })}
+                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Scan Frequency (Minutes)</Label>
+                <Input
+                  type="number"
+                  min="15"
+                  max="1440"
+                  value={editFormData.scan_frequency}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, scan_frequency: parseInt(e.target.value) || 60 })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Target Channel / Feed URL</Label>
+                <Input
+                  type="url"
+                  placeholder="https://youtube.com/@channel"
+                  value={editFormData.source_url}
+                  onChange={(e) => setEditFormData({ ...editFormData, source_url: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Status</Label>
+                <select
+                  value={editFormData.status}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      status: e.target.value as "active" | "paused",
+                    })
+                  }
+                  className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="active">Active</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingSource(null);
+                  }}
+                  className="border-slate-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isEditing}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                >
+                  {isEditing ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </form>

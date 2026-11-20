@@ -57,7 +57,7 @@ export default function CalendarPage() {
             Publishing Calendar
           </h1>
           <p className="text-sm text-slate-500">
-            Scheduled release timelines and upcoming syndication batches.
+            Scheduled release timelines and upcoming publishing batches.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export default function CalendarPage() {
             Upcoming & Recent Timeline
           </CardTitle>
           <CardDescription className="text-xs text-slate-500">
-            Chronological view of syndication events across YouTube, TikTok, and Facebook.
+            Chronological view of publishing events across YouTube, TikTok, and Facebook.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">

@@ -87,8 +87,16 @@ export default function RootHomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
-        Post-Vibe Automated Video Syndication SaaS &copy; 2026. All rights reserved.
+      <footer className="border-t border-slate-800 px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+        <p>Post-Vibe Automated Video Syndication SaaS &copy; 2026. All rights reserved.</p>
+        <div className="flex items-center gap-4">
+          <Link href="/terms" className="hover:text-slate-300 transition-colors">
+            Terms of Service
+          </Link>
+          <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+            Privacy Policy
+          </Link>
+        </div>
       </footer>
     </div>
   );

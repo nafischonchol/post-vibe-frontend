@@ -144,7 +144,7 @@ function PlatformAccountsContent() {
             Destination Platform Accounts
           </h1>
           <p className="text-sm text-slate-500">
-            Connect destination social accounts to syndicate short-form video reels and shorts.
+            Connect destination social accounts to publish short-form video reels and shorts.
           </p>
         </div>
         <div className="flex items-center gap-3">

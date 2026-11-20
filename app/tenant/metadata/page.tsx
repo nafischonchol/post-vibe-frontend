@@ -228,7 +228,7 @@ function MetadataEditor() {
             Platform Metadata Editor
           </h1>
           <p className="text-sm text-slate-500">
-            Platform-specific copywriting, tags, and hashtag optimization for multi-channel syndication.
+            Platform-specific copywriting, tags, and hashtag optimization for multi-channel publishing.
           </p>
         </div>
 
@@ -247,7 +247,7 @@ function MetadataEditor() {
             <Link href={`/tenant/publishing?video_id=${selectedVideoId}`}>
               <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white">
                 <Send className="h-4 w-4 mr-1.5" />
-                Proceed to Syndicate
+                Proceed to Publish
               </Button>
             </Link>
           </div>

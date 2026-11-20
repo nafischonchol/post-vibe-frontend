@@ -192,7 +192,7 @@ function PublishingManager() {
             Together Publishing
           </h1>
           <p className="text-sm text-slate-500">
-            Atomically syndicate videos simultaneously across YouTube, TikTok, and Facebook Reels.
+            Atomically publish videos simultaneously across YouTube, TikTok, and Facebook Reels.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ function PublishingManager() {
             <div className="py-12 text-center text-xs text-slate-400">Loading batches...</div>
           ) : batches.length === 0 ? (
             <div className="py-12 text-center text-xs text-slate-400">
-              No publishing batches yet. Click &quot;New Publishing Batch&quot; to syndicate a video.
+              No publishing batches yet. Click &quot;New Publishing Batch&quot; to publish a video.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -295,31 +295,39 @@ function PublishingManager() {
 
                       <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1.5">
-                          {batch.schedules?.map((s) => (
-                            <span
-                              key={s.id}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border capitalize ${
-                                ["completed", "published"].includes(s.upload_status)
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                  : s.upload_status === "failed"
-                                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                                  : "bg-slate-100 text-slate-700 border-slate-200"
-                              }`}
-                            >
-                              <span>{s.platform}</span>: <span>{s.upload_status}</span>
-                              {s.platform_post_url && (
-                                <a
-                                  href={s.platform_post_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="ml-1 text-emerald-700 hover:text-emerald-900 inline-flex items-center"
-                                  title="View on platform"
-                                >
-                                  <ExternalLink className="h-2.5 w-2.5" />
-                                </a>
-                              )}
-                            </span>
-                          ))}
+                          {batch.schedules?.map((s) => {
+                            const postUrl = s.external_post_url || s.platform_post_url || (s.external_post_id ? (
+                              s.platform.toLowerCase() === "facebook" ? `https://facebook.com/reel/${s.external_post_id}` :
+                              s.platform.toLowerCase() === "youtube" ? `https://youtube.com/shorts/${s.external_post_id}` :
+                              `https://tiktok.com/video/${s.external_post_id}`
+                            ) : null);
+
+                            return (
+                              <span
+                                key={s.id}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border capitalize ${
+                                  ["completed", "published"].includes(s.upload_status)
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : s.upload_status === "failed"
+                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                    : "bg-slate-100 text-slate-700 border-slate-200"
+                                }`}
+                              >
+                                <span>{s.platform}</span>: <span>{s.upload_status}</span>
+                                {postUrl && (
+                                  <a
+                                    href={postUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-1 text-emerald-700 hover:text-emerald-900 inline-flex items-center"
+                                    title={`View on ${s.platform}`}
+                                  >
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </a>
+                                )}
+                              </span>
+                            );
+                          })}
                         </div>
                       </td>
 
@@ -335,27 +343,48 @@ function PublishingManager() {
                             <Ban className="h-3.5 w-3.5 mr-1" />
                             Cancel
                           </Button>
-                        ) : batch.schedules?.some((s) => s.platform_post_url) ? (
-                          <div className="flex items-center justify-end gap-1.5">
-                            {batch.schedules
-                              .filter((s) => s.platform_post_url)
-                              .map((s) => (
-                                <a
-                                  key={s.id}
-                                  href={s.platform_post_url!}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md bg-slate-900 hover:bg-slate-800 text-white transition-colors"
-                                  title={`View published post on ${s.platform}`}
-                                >
-                                  <span>View Reel</span>
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              ))}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-300 font-mono">—</span>
-                        )}
+                        ) : (() => {
+                          const publishedSchedules = (batch.schedules || []).map((s) => {
+                            const url = s.external_post_url || s.platform_post_url || (s.external_post_id ? (
+                              s.platform.toLowerCase() === "facebook" ? `https://facebook.com/reel/${s.external_post_id}` :
+                              s.platform.toLowerCase() === "youtube" ? `https://youtube.com/shorts/${s.external_post_id}` :
+                              `https://tiktok.com/video/${s.external_post_id}`
+                            ) : null);
+                            return { ...s, resolvedUrl: url };
+                          }).filter((s) => !!s.resolvedUrl);
+
+                          if (publishedSchedules.length === 0) {
+                            return <span className="text-xs text-slate-300 font-mono">—</span>;
+                          }
+
+                          return (
+                            <div className="flex items-center justify-end flex-wrap gap-1.5">
+                              {publishedSchedules.map((s) => {
+                                const p = s.platform.toLowerCase();
+                                const label = p === "facebook" ? "Facebook Reel" : p === "youtube" ? "YouTube Short" : p === "tiktok" ? "TikTok Post" : `${s.platform} Post`;
+                                const colorClass = p === "facebook"
+                                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                  : p === "youtube"
+                                  ? "bg-rose-600 hover:bg-rose-700 text-white"
+                                  : "bg-slate-900 hover:bg-slate-800 text-white";
+
+                                return (
+                                  <a
+                                    key={s.id}
+                                    href={s.resolvedUrl!}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md shadow-xs transition-colors ${colorClass}`}
+                                    title={`Open ${s.platform} post in new tab`}
+                                  >
+                                    <span>{label}</span>
+                                    <ExternalLink className="h-3 w-3 shrink-0" />
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))}
@@ -400,6 +429,18 @@ function PublishingManager() {
                     </option>
                   ))}
                 </select>
+                {selectedVideoId && (
+                  <div className="flex justify-end pt-0.5">
+                    <Link
+                      href={`/tenant/metadata?video_id=${selectedVideoId}`}
+                      target="_blank"
+                      className="text-[11px] text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span>Edit caption & hashtags in Metadata Editor ↗</span>
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Target Platforms Selection */}

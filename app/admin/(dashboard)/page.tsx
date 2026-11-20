@@ -157,7 +157,7 @@ export default function AdminDashboardPage() {
         <StatCard
           title="Videos Ingested"
           value={loading ? "..." : data?.videos?.total ?? 0}
-          description={`${data?.videos?.ready ?? 0} ready to syndicate`}
+          description={`${data?.videos?.ready ?? 0} ready to publish`}
           icon={Video}
         />
         <StatCard
