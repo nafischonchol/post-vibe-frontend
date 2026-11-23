@@ -271,7 +271,7 @@ function PublishingManager() {
                           Batch #{batch.id}
                         </div>
                         <div className="text-xs text-slate-500 truncate mt-0.5">
-                          {batch.video?.title || batch.video?.original_caption || "Video #" + batch.video?.id}
+                          {batch.video?.title || batch.video?.original_caption || "Untitled Video"}
                         </div>
                       </td>
 
@@ -452,15 +452,14 @@ function PublishingManager() {
                 <SearchableSelect
                   options={videos.map((v) => ({
                     value: v.id.toString(),
-                    label: v.title || `Video #${v.id}`,
-                    badge: `#${v.id}`,
+                    label: v.title || v.original_caption || "Untitled Video",
                     subLabel: v.original_caption,
                     platform: v.processing_status,
                   }))}
                   value={selectedVideoId?.toString() || ""}
                   onChange={(val) => setSelectedVideoId(parseInt(val))}
                   placeholder="Select a video to publish..."
-                  searchPlaceholder="Search by ID, caption, or title..."
+                  searchPlaceholder="Search by caption or title..."
                 />
                 {selectedVideoId && (
                   <div className="flex justify-end pt-0.5">
@@ -605,7 +604,7 @@ function PublishingManager() {
               <div>
                 <span className="font-semibold text-slate-700">Video:</span>{" "}
                 <span className="text-slate-600">
-                  {selectedFailedBatch.video?.title || selectedFailedBatch.video?.original_caption || `Video #${selectedFailedBatch.video?.id}`}
+                  {selectedFailedBatch.video?.title || selectedFailedBatch.video?.original_caption || "Untitled Video"}
                 </span>
               </div>
 

@@ -328,11 +328,8 @@ function MetadataEditor() {
             <div className="flex items-center gap-1.5 truncate">
               {currentVideo ? (
                 <>
-                  <span className="font-mono text-indigo-600 font-semibold bg-indigo-50 px-1 py-0.2 rounded text-[10px] shrink-0 border border-indigo-100">
-                    #{currentVideo.id}
-                  </span>
                   <span className="truncate">
-                    {currentVideo.title || currentVideo.original_caption || `Video #${currentVideo.id}`}
+                    {currentVideo.title || currentVideo.original_caption || "Untitled Video"}
                   </span>
                   <span className="text-[10px] uppercase font-mono text-slate-400 bg-slate-100 px-1 py-0.2 rounded border border-slate-200 shrink-0">
                     {currentVideo.source_platform}
@@ -355,7 +352,7 @@ function MetadataEditor() {
                   <input
                     ref={videoSearchInputRef}
                     type="text"
-                    placeholder="Search by ID, caption, title, or platform..."
+                    placeholder="Search by caption, title, or platform..."
                     value={videoSearchTerm}
                     onChange={(e) => setVideoSearchTerm(e.target.value)}
                     className="w-full h-8 pl-8 pr-7 rounded-md border border-slate-200 bg-white text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
@@ -399,14 +396,11 @@ function MetadataEditor() {
                       >
                         <div className="space-y-0.5 flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-[10px] text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-100 font-bold shrink-0">
-                              #{v.id}
-                            </span>
                             <span className="text-[9px] uppercase font-mono text-slate-500 bg-slate-100 px-1 py-0.2 rounded border border-slate-200 shrink-0">
                               {v.source_platform}
                             </span>
                             <span className="font-medium text-slate-900 truncate">
-                              {v.title || `Video #${v.id}`}
+                              {v.title || v.original_caption || "Untitled Video"}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 line-clamp-1 font-normal">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Radio,
   Plus,
@@ -359,7 +360,18 @@ export default function SourcesPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 font-mono font-medium text-slate-900">
-                        {source.videos_count || 0}
+                        {source.videos_count > 0 ? (
+                          <Link
+                            href={`/tenant/videos?source_id=${source.id}`}
+                            className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:underline"
+                            title="View Videos in Library"
+                          >
+                            <span>{source.videos_count}</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        ) : (
+                          <span>0</span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-slate-400">
                         {source.last_scanned_at

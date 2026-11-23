@@ -20,6 +20,8 @@ import {
   Play,
   Download,
   DownloadCloud,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/admin/ui/card";
 import { Button } from "@/components/admin/ui/button";
@@ -66,6 +68,14 @@ export default function VideosPage() {
   // Playback & Download State
   const [playingVideo, setPlayingVideo] = useState<VideoItem | null>(null);
   const [downloadingVideoId, setDownloadingVideoId] = useState<number | null>(null);
+  const [copiedUrlId, setCopiedUrlId] = useState<number | null>(null);
+
+  const handleCopyUrl = (e: React.MouseEvent, id: number, url: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(url);
+    setCopiedUrlId(id);
+    setTimeout(() => setCopiedUrlId(null), 2000);
+  };
 
   // Filters
   const [search, setSearch] = useState("");
@@ -343,9 +353,9 @@ export default function VideosPage() {
                                 <button
                                   type="button"
                                   onClick={() => setPlayingVideo(v)}
-                                  className="font-semibold text-slate-900 text-xs truncate hover:text-indigo-600 transition-colors text-left"
+                                  className="font-semibold text-slate-900 text-xs line-clamp-2 hover:text-indigo-600 transition-colors text-left"
                                 >
-                                  {v.title || "Video #" + v.id}
+                                  {v.title || v.original_caption || "Untitled Video"}
                                 </button>
                                 {v.is_downloaded || v.temporary_storage_path ? (
                                   <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 shrink-0">
@@ -358,9 +368,16 @@ export default function VideosPage() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">
-                                {v.original_caption || "(No original caption provided)"}
-                              </p>
+                              {Boolean(
+                                v.title &&
+                                  v.original_caption &&
+                                  v.title.trim() !== v.original_caption.trim() &&
+                                  !v.original_caption.trim().startsWith(v.title.replace(/\.{3}$/, "").trim())
+                              ) && (
+                                <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                                  {v.original_caption}
+                                </p>
+                              )}
                               {v.original_hashtags && v.original_hashtags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {v.original_hashtags.slice(0, 3).map((tag, idx) => (
@@ -390,6 +407,32 @@ export default function VideosPage() {
                               title={`Published at source: ${new Date(v.source_published_at).toLocaleString()}`}
                             >
                               {new Date(v.source_published_at).toLocaleDateString()}
+                            </div>
+                          )}
+                          {(v.source_post_url || v.source_url) && (
+                            <div className="mt-1 flex items-center gap-1.5">
+                              <a
+                                href={v.source_post_url || v.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 hover:underline font-medium"
+                                title={v.source_post_url || v.source_url}
+                              >
+                                <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                                <span>Original Post</span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={(e) => handleCopyUrl(e, v.id, (v.source_post_url || v.source_url)!)}
+                                className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                                title={copiedUrlId === v.id ? "Copied!" : "Copy original URL"}
+                              >
+                                {copiedUrlId === v.id ? (
+                                  <Check className="h-3 w-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </button>
                             </div>
                           )}
                         </td>
@@ -473,7 +516,7 @@ export default function VideosPage() {
                                 className="h-7 px-2 text-xs bg-slate-900 hover:bg-slate-800 text-white"
                               >
                                 <Send className="h-3 w-3 mr-1" />
-                                Syndicate
+                                Publish
                               </Button>
                             </Link>
 
@@ -552,7 +595,7 @@ export default function VideosPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base font-semibold text-slate-900 truncate">
-                    {playingVideo.title || `Video #${playingVideo.id}`}
+                    {playingVideo.title || playingVideo.original_caption || "Untitled Video"}
                   </h2>
                   <span className="capitalize px-2 py-0.5 rounded font-mono text-[11px] bg-slate-100 text-slate-700 border border-slate-200">
                     {playingVideo.source_platform}
@@ -569,9 +612,31 @@ export default function VideosPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                  {playingVideo.original_caption || "(No caption)"}
-                </p>
+                {Boolean(
+                  playingVideo.title &&
+                    playingVideo.original_caption &&
+                    playingVideo.title.trim() !== playingVideo.original_caption.trim() &&
+                    !playingVideo.original_caption.trim().startsWith(playingVideo.title.replace(/\.{3}$/, "").trim())
+                ) && (
+                  <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                    {playingVideo.original_caption}
+                  </p>
+                )}
+                {(playingVideo.source_post_url || playingVideo.source_url) && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[11px] text-slate-400">Source URL:</span>
+                    <a
+                      href={playingVideo.source_post_url || playingVideo.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 hover:underline font-mono truncate max-w-sm bg-indigo-50/60 px-1.5 py-0.5 rounded border border-indigo-100"
+                      title={playingVideo.source_post_url || playingVideo.source_url}
+                    >
+                      <ExternalLink className="h-3 w-3 shrink-0 text-indigo-500" />
+                      <span className="truncate">{playingVideo.source_post_url || playingVideo.source_url}</span>
+                    </a>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setPlayingVideo(null)}

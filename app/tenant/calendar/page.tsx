@@ -118,7 +118,7 @@ export default function CalendarPage() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 mt-0.5 line-clamp-1 max-w-md">
-                        {batch.video?.title || batch.video?.original_caption || "Video #" + batch.video?.id}
+                        {batch.video?.title || batch.video?.original_caption || "Untitled Video"}
                       </p>
                       <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                         <CalendarIcon className="h-3 w-3" />

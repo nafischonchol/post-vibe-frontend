@@ -102,7 +102,7 @@ export default function HistoryPage() {
                           Batch #{batch.id}
                         </div>
                         <div className="text-xs text-slate-500 truncate mt-0.5">
-                          {batch.video?.title || batch.video?.original_caption || "Video #" + batch.video?.id}
+                          {batch.video?.title || batch.video?.original_caption || "Untitled Video"}
                         </div>
                       </td>
 
