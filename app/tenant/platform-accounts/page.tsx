@@ -536,6 +536,149 @@ function PlatformAccountsContent() {
           </div>
         </div>
       )}
+
+      {/* Edit Account Modal Dialog */}
+      {showEditModal && editingAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-slate-900">Edit Connected Account</h2>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded border uppercase tracking-wider bg-slate-100 text-slate-700">
+                  {editingAccount.platform}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingAccount(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateAccount} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">
+                  {editingAccount.platform === "youtube"
+                    ? "Channel Name"
+                    : editingAccount.platform === "tiktok"
+                      ? "TikTok Account Name"
+                      : "Facebook Page Name"}
+                </Label>
+                <Input
+                  type="text"
+                  placeholder={
+                    editingAccount.platform === "youtube"
+                      ? "e.g. Acme Tech"
+                      : editingAccount.platform === "tiktok"
+                        ? "e.g. Acme Shorts"
+                        : "e.g. Acme Technology"
+                  }
+                  value={editForm.account_name}
+                  onChange={(e) => setEditForm({ ...editForm, account_name: e.target.value })}
+                  required
+                />
+              </div>
+
+              {editingAccount.platform === "facebook" ? (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Facebook Page ID</Label>
+                  <Input
+                    type="text"
+                    placeholder="123456789012345"
+                    value={editForm.external_account_id}
+                    onChange={(e) => setEditForm({ ...editForm, external_account_id: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">
+                    {editingAccount.platform === "youtube" ? "Channel Handle" : "TikTok Username"}
+                  </Label>
+                  <Input
+                    type="text"
+                    placeholder="@channel"
+                    value={editForm.account_handle}
+                    onChange={(e) => setEditForm({ ...editForm, account_handle: e.target.value })}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Account Status</Label>
+                <SearchableSelect
+                  options={[
+                    { value: "active", label: "Active", badge: "LIVE" },
+                    { value: "inactive", label: "Inactive", badge: "OFF" },
+                  ]}
+                  value={editForm.status}
+                  onChange={(val) => setEditForm({ ...editForm, status: val })}
+                  placeholder="Select Status"
+                  searchPlaceholder="Search status..."
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 space-y-3">
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
+                  Update API Credentials (Optional)
+                </span>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">
+                    Access Token <span className="font-normal text-slate-400">(leave blank to keep current)</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    placeholder="Enter new access token if updating"
+                    value={editForm.access_token}
+                    onChange={(e) => setEditForm({ ...editForm, access_token: e.target.value })}
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">
+                    Refresh Token <span className="font-normal text-slate-400">(leave blank to keep current)</span>
+                  </Label>
+                  <Input
+                    type="password"
+                    placeholder="Enter new refresh token if updating"
+                    value={editForm.refresh_token}
+                    onChange={(e) => setEditForm({ ...editForm, refresh_token: e.target.value })}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingAccount(null);
+                  }}
+                  className="border-slate-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isUpdating}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                >
+                  {isUpdating ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
