@@ -454,7 +454,7 @@ export default function SourcesPage() {
             </div>
 
             <p className="text-xs text-slate-500">
-              Paste a public video or reel URL from TikTok, YouTube Shorts, or Instagram. The engine will scrape metadata, extract hashtags, resolve the media stream, and prepare AI syndication.
+              Paste a public video or reel URL from TikTok, YouTube Shorts, Instagram, or Facebook. The engine will scrape metadata, extract hashtags, resolve the media stream, and prepare AI syndication.
             </p>
 
             <form onSubmit={handleDirectScrape} className="space-y-4">
@@ -462,7 +462,7 @@ export default function SourcesPage() {
                 <Label className="text-xs font-semibold text-slate-700">Video Link URL</Label>
                 <Input
                   type="url"
-                  placeholder="https://www.tiktok.com/@user/video/... or https://youtube.com/shorts/..."
+                  placeholder="https://www.facebook.com/... or https://youtube.com/shorts/... or https://tiktok.com/..."
                   value={scrapeUrl}
                   onChange={(e) => setScrapeUrl(e.target.value)}
                   required
