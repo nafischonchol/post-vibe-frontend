@@ -73,6 +73,7 @@ export default function SourcesPage() {
   const [showScrapeModal, setShowScrapeModal] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scrapeSourceId, setScrapeSourceId] = useState<number | null>(null);
   const [scrapedResult, setScrapedResult] = useState<any>(null);
 
   const fetchSources = async () => {
@@ -126,10 +127,11 @@ export default function SourcesPage() {
       setError(null);
       setScrapedResult(null);
 
-      const res = await tenantApi.scrapeVideo(scrapeUrl.trim());
+      const res = await tenantApi.scrapeVideo(scrapeUrl.trim(), scrapeSourceId || undefined);
       setScrapedResult(res.resources);
       setSuccessMessage("Video successfully scraped and dispatched to ingestion pipeline!");
       setScrapeUrl("");
+      setScrapeSourceId(null);
       await fetchSources();
     } catch (err: any) {
       setError(err?.message || "Failed to scrape video from URL.");
@@ -469,6 +471,24 @@ export default function SourcesPage() {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Assign to Monitored Source (Optional)</Label>
+                <SearchableSelect
+                  options={[
+                    { value: "", label: "None (Direct Video Only)" },
+                    ...sources.map((s) => ({
+                      value: String(s.id),
+                      label: `${s.name} (${s.platform.toUpperCase()})`,
+                      badge: s.platform.toUpperCase().slice(0, 2),
+                    })),
+                  ]}
+                  value={scrapeSourceId ? String(scrapeSourceId) : ""}
+                  onChange={(val) => setScrapeSourceId(val ? parseInt(val) : null)}
+                  placeholder="Select source to assign"
+                  searchPlaceholder="Search sources..."
+                />
+              </div>
+
               {scrapedResult && (
                 <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-xs space-y-1">
                   <div className="font-semibold text-emerald-900 flex items-center gap-1.5">
@@ -578,6 +598,11 @@ export default function SourcesPage() {
                   onChange={(e) => setFormData({ ...formData, source_url: e.target.value })}
                   required
                 />
+                {formData.platform === "facebook" && (
+                  <p className="text-[11px] text-amber-600 mt-1">
+                    Tip: Meta login walls restrict automated polling of Facebook Page profile feeds. You can provide a direct video/reel URL here or use &quot;Scrape Video Link&quot; to syndicate any specific video.
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
