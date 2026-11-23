@@ -214,6 +214,26 @@ export const tenantApi = {
     });
   },
 
+  updatePlatformAccount: async (
+    id: number,
+    payload: {
+      account_name?: string;
+      account_handle?: string | null;
+      external_account_id?: string | null;
+      status?: string;
+      access_token?: string;
+      refresh_token?: string;
+      avatar_url?: string | null;
+    },
+    token?: string
+  ) => {
+    return request(`/tenant/platform-accounts/${id}`, {
+      method: "PUT",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: JSON.stringify(payload),
+    });
+  },
+
   getOAuthRedirectUrl: async (platform: string, token?: string) => {
     return request(`/tenant/platform-accounts/oauth/${platform}/redirect`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

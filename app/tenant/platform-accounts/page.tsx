@@ -6,6 +6,7 @@ import {
   Share2,
   Plus,
   Trash2,
+  Pencil,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -58,6 +59,19 @@ function PlatformAccountsContent() {
     access_token: "",
     refresh_token: "",
     external_account_id: "",
+  });
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<PlatformAccount | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editForm, setEditForm] = useState({
+    account_name: "",
+    account_handle: "",
+    external_account_id: "",
+    status: "active",
+    access_token: "",
+    refresh_token: "",
   });
 
   const fetchAccounts = async () => {
@@ -127,6 +141,57 @@ function PlatformAccountsContent() {
       setSuccessMessage("Account disconnected successfully.");
     } catch (err: any) {
       alert(err?.message || "Failed to disconnect account.");
+    }
+  };
+
+  const handleOpenEdit = (acc: PlatformAccount) => {
+    setEditingAccount(acc);
+    setEditForm({
+      account_name: acc.account_name || "",
+      account_handle: acc.account_handle || "",
+      external_account_id: acc.external_account_id || "",
+      status: acc.status || "active",
+      access_token: "",
+      refresh_token: "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAccount) return;
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      const payload: Record<string, any> = {
+        account_name: editForm.account_name,
+        account_handle: editForm.account_handle || null,
+        external_account_id: editForm.external_account_id || null,
+        status: editForm.status,
+      };
+
+      if (editForm.access_token.trim()) {
+        payload.access_token = editForm.access_token.trim();
+      }
+      if (editForm.refresh_token.trim()) {
+        payload.refresh_token = editForm.refresh_token.trim();
+      }
+
+      const res = await tenantApi.updatePlatformAccount(editingAccount.id, payload);
+      const updated = res.resource || res.data || res;
+
+      setAccounts((prev) =>
+        prev.map((a) => (a.id === editingAccount.id ? { ...a, ...updated } : a))
+      );
+      setShowEditModal(false);
+      setEditingAccount(null);
+      setSuccessMessage(`Account "${editForm.account_name}" updated successfully.`);
+    } catch (err: any) {
+      setError(err?.message || "Failed to update platform account.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -246,15 +311,32 @@ function PlatformAccountsContent() {
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                            <CheckCircle2 className="h-2.5 w-2.5" />
-                            Active
-                          </span>
+                          {acc.status === "active" ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                              <CheckCircle2 className="h-2.5 w-2.5" />
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 capitalize">
+                              <AlertCircle className="h-2.5 w-2.5" />
+                              {acc.status}
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEdit(acc)}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                            title="Edit Account"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDisconnect(acc.id)}
                             className="h-7 w-7 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                            title="Disconnect Account"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
